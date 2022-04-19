@@ -64,6 +64,11 @@ func (s *scanner) scan() error {
 		case '/':
 			if s.match('/') {
 				s.comment()
+			} else if s.match('*') {
+				err := s.blockComment()
+				if err != nil {
+					return err
+				}
 			} else {
 				s.addToken(SLASH, nil)
 			}
@@ -111,9 +116,29 @@ func (s *scanner) comment() {
 	}
 }
 
+func (s *scanner) blockComment() error {
+	nestingLevel := 1
+	for nestingLevel > 0 {
+		c, err := s.nextCharacter()
+		if c == '\000' || err != nil {
+			return err
+		}
+		if c == '/' && s.match('*') {
+			nestingLevel++
+			continue
+		}
+		if c == '*' && s.match('/') {
+			nestingLevel--
+			continue
+		}
+	}
+	s.tokenStartColumn = s.currentColumn + 1
+	return nil
+}
+
 func (s *scanner) nextCharacter() (rune, error) {
 	s.currentColumn++
-	if s.line == -1 || s.currentColumn == len(s.lines[s.line]) {
+	for s.line == -1 || s.currentColumn >= len(s.lines[s.line]) {
 		notDone, err := s.nextLine()
 		if !notDone {
 			return '\000', err
