@@ -74,7 +74,6 @@ func (s *scanner) scan() error {
 			}
 
 		case ' ', '\t':
-			s.tokenStartColumn = s.currentColumn + 1
 			break
 
 		default:
@@ -89,6 +88,7 @@ func (s *scanner) scan() error {
 		if err != nil {
 			return err
 		}
+		s.tokenStartColumn = s.currentColumn
 	}
 
 	return nil
@@ -132,7 +132,6 @@ func (s *scanner) blockComment() error {
 			continue
 		}
 	}
-	s.tokenStartColumn = s.currentColumn + 1
 	return nil
 }
 
@@ -192,7 +191,6 @@ func (s *scanner) addToken(tokenType TokenType, literal any) {
 		Lexeme:  string(s.lines[s.line][s.tokenStartColumn : s.currentColumn+1]),
 		Literal: literal,
 	})
-	s.tokenStartColumn = s.currentColumn + 1
 }
 
 func (s *scanner) newError(msg string) error {

@@ -9,12 +9,12 @@ const (
 	MINUS    TokenType = "MINUS"
 	ASTERISK TokenType = "ASTERISK"
 	SLASH    TokenType = "SLASH"
-	PERCENT  TokenType = "SLASH"
+	PERCENT  TokenType = "PERCENT"
 
 	OPEN_PAREN  TokenType = "OPEN_PAREN"
 	CLOSE_PAREN TokenType = "CLOSE_PAREN"
 
-	NUMBER TokenType = "Number"
+	NUMBER TokenType = "NUMBER"
 
 	EOF TokenType = "EOF"
 )
