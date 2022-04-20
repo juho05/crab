@@ -23,7 +23,12 @@ const (
 	GREATER       TokenType = "GREATER"
 	GREATER_EQUAL TokenType = "GREATER_EQUAL"
 
-	NUMBER TokenType = "NUMBER"
+	NUMBER     TokenType = "NUMBER"
+	STRING     TokenType = "STRING"
+	IDENTIFIER TokenType = "IDENTIFIER"
+
+	TRUE  = "TRUE"
+	FALSE = "FALSE"
 
 	EOF TokenType = "EOF"
 )

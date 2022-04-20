@@ -131,7 +131,7 @@ func (p *parser) unary() (Expr, error) {
 }
 
 func (p *parser) primary() (Expr, error) {
-	if p.match(NUMBER) {
+	if p.match(NUMBER, STRING, TRUE, FALSE) {
 		return ExprLiteral{
 			Value: p.previous().Literal,
 		}, nil

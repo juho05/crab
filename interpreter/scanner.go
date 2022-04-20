@@ -88,12 +88,17 @@ func (s *scanner) scan() error {
 				s.addToken(SLASH, nil)
 			}
 
+		case '"':
+			s.string()
+
 		case ' ', '\t':
 			break
 
 		default:
 			if isDigit(c) {
 				s.number()
+			} else if isAlpha(c) {
+				s.identifier()
 			} else {
 				return s.newError(fmt.Sprintf("Unexpected character '%c'.", c))
 			}
@@ -130,6 +135,34 @@ func (s *scanner) number() {
 
 	value, _ := strconv.ParseFloat(string(s.lines[s.line][s.tokenStartColumn:s.currentColumn+1]), 64)
 	s.addToken(NUMBER, value)
+}
+
+func (s *scanner) string() error {
+	for s.peek() != '"' && s.peek() != '\n' {
+		s.nextCharacter()
+	}
+	if !s.match('"') {
+		return s.newError("Unterminated string.")
+	}
+	s.addToken(STRING, string(s.lines[s.line][s.tokenStartColumn+1:s.currentColumn]))
+	return nil
+}
+
+func (s *scanner) identifier() {
+	for isAlphaNum(s.peek()) {
+		s.nextCharacter()
+	}
+
+	name := string(s.lines[s.line][s.tokenStartColumn : s.currentColumn+1])
+
+	switch name {
+	case "true":
+		s.addToken(TRUE, true)
+	case "false":
+		s.addToken(FALSE, false)
+	default:
+		s.addToken(IDENTIFIER, nil)
+	}
 }
 
 func (s *scanner) comment() {
@@ -217,6 +250,14 @@ func (s *scanner) addToken(tokenType TokenType, literal any) {
 
 func isDigit(char rune) bool {
 	return char >= '0' && char <= '9'
+}
+
+func isAlpha(char rune) bool {
+	return char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z' || char == '_'
+}
+
+func isAlphaNum(char rune) bool {
+	return isDigit(char) || isAlpha(char)
 }
 
 type ScanError struct {
