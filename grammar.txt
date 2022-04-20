@@ -1,9 +1,12 @@
 ============ Crab Formal Grammar ============
 
-expression -> equality
+expression -> or
+or -> and (('||'|'^^') and)*
+and -> equality ('&&' equality)*
 equality -> comparison (('=='|'!=') comparison)*
 comparison -> term (('>'|'>='|'<'|'<=') comparison)*
 term -> factor (('+'|'-') factor)*
 factor -> unary (('*'|'/'|'%') unary)*
 unary -> '-' unary | primary
-primary -> NUMBER
+primary -> NUMBER | STRING | keyword | IDENTIFIER
+keyword -> "true" | "false"

@@ -1,1 +1,1 @@
-("Hello World" == 5) == false
+true && true || true && true ^^ true && true

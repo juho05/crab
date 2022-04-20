@@ -76,6 +76,25 @@ func (s *scanner) scan() error {
 				s.addToken(GREATER, nil)
 			}
 
+		case '&':
+			if s.match('&') {
+				s.addToken(AND, nil)
+			} else {
+				return s.newError(fmt.Sprintf("Unexpected character '%c'.", c))
+			}
+		case '|':
+			if s.match('|') {
+				s.addToken(OR, nil)
+			} else {
+				return s.newError(fmt.Sprintf("Unexpected character '%c'.", c))
+			}
+		case '^':
+			if s.match('^') {
+				s.addToken(XOR, nil)
+			} else {
+				return s.newError(fmt.Sprintf("Unexpected character '%c'.", c))
+			}
+
 		case '/':
 			if s.match('/') {
 				s.comment()

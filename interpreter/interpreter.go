@@ -113,6 +113,34 @@ func (i *interpreter) VisitBinary(expr ExprBinary) (any, error) {
 	}
 }
 
+func (i *interpreter) VisitLogical(expr ExprLogical) (any, error) {
+	left, err := expr.Left.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+
+	if expr.Operator.Type == XOR {
+		right, err := expr.Right.Accept(i)
+		if err != nil {
+			return nil, err
+		}
+		return isTruthy(left) != isTruthy(right), nil
+	}
+
+	if expr.Operator.Type == OR && isTruthy(left) {
+		return true, nil
+	}
+	if expr.Operator.Type == AND && !isTruthy(left) {
+		return false, nil
+	}
+
+	right, err := expr.Right.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	return isTruthy(right), nil
+}
+
 func isNumber(values ...any) bool {
 	for _, v := range values {
 		if _, ok := v.(float64); !ok {

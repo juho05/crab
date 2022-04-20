@@ -5,6 +5,7 @@ type ExprVisitor interface {
 	VisitGrouping(expr ExprGrouping) (any, error)
 	VisitUnary(expr ExprUnary) (any, error)
 	VisitBinary(expr ExprBinary) (any, error)
+	VisitLogical(expr ExprLogical) (any, error)
 }
 
 type Expr interface {
@@ -44,4 +45,14 @@ type ExprBinary struct {
 
 func (e ExprBinary) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitBinary(e)
+}
+
+type ExprLogical struct {
+	Operator Token
+	Left     Expr
+	Right    Expr
+}
+
+func (e ExprLogical) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitLogical(e)
 }

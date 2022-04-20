@@ -37,6 +37,12 @@ func (a ASTPrinter) VisitBinary(binary ExprBinary) (any, error) {
 	return fmt.Sprintf("(%v %s %v)", left, binary.Operator.Lexeme, right), nil
 }
 
+func (a ASTPrinter) VisitLogical(logical ExprLogical) (any, error) {
+	left, _ := logical.Left.Accept(a)
+	right, _ := logical.Right.Accept(a)
+	return fmt.Sprintf("(%v %s %v)", left, logical.Operator.Lexeme, right), nil
+}
+
 func literalToString(literal ExprLiteral) string {
 	if _, ok := literal.Value.(string); ok {
 		return fmt.Sprintf("\"%v\"", literal.Value)

@@ -23,7 +23,51 @@ func (p *parser) parse() (Expr, error) {
 }
 
 func (p *parser) expression() (Expr, error) {
-	return p.equality()
+	return p.or()
+}
+
+func (p *parser) or() (Expr, error) {
+	expr, err := p.and()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(OR, XOR) {
+		operator := p.previous()
+		right, err := p.and()
+		if err != nil {
+			return nil, err
+		}
+		expr = ExprLogical{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+func (p *parser) and() (Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(AND) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		expr = ExprLogical{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *parser) equality() (Expr, error) {

@@ -23,6 +23,10 @@ const (
 	GREATER       TokenType = "GREATER"
 	GREATER_EQUAL TokenType = "GREATER_EQUAL"
 
+	AND TokenType = "AND"
+	OR  TokenType = "OR"
+	XOR TokenType = "XOR"
+
 	NUMBER     TokenType = "NUMBER"
 	STRING     TokenType = "STRING"
 	IDENTIFIER TokenType = "IDENTIFIER"
