@@ -1,6 +1,6 @@
 # crab
 
-A dynamically typed interpreted programming language with syntax similar to Go.
+A dynamically typed interpreted programming language.
 
 ## Installation
 
