@@ -33,7 +33,6 @@ func main() {
 	tokens, _, err := interpreter.Scan(sourceFile)
 	sourceFile.Close()
 	if err != nil {
-		// TODO: Implement prettier and more useful error output.
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
