@@ -1,0 +1,7 @@
+============ Crab Formal Grammar ============
+
+expression -> term
+term -> factor ('+'|'-' factor)*
+factor -> unary ('*'|'/'|'%' unary)*
+unary -> '-' unary | primary
+primary -> NUMBER

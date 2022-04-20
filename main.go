@@ -30,7 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	tokens, _, err := interpreter.Scan(sourceFile)
+	tokens, lines, err := interpreter.Scan(sourceFile)
 	sourceFile.Close()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -39,5 +39,15 @@ func main() {
 
 	if *verbose {
 		fmt.Println("Tokens:", tokens)
+	}
+
+	program, err := interpreter.Parse(tokens, lines)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	if *verbose {
+		fmt.Println("Program:", interpreter.PrintAST(program))
 	}
 }

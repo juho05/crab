@@ -110,6 +110,13 @@ func (s *scanner) scan() error {
 		s.tokenStartColumn = s.currentColumn
 	}
 
+	s.tokens = append(s.tokens, Token{
+		Line:   s.line,
+		Column: len(s.lines[s.line]),
+		Type:   EOF,
+		Lexeme: "",
+	})
+
 	return nil
 }
 
