@@ -50,4 +50,12 @@ func main() {
 	if *verbose {
 		fmt.Println("Program:", interpreter.PrintAST(program))
 	}
+
+	result, err := interpreter.Interpret(program, lines)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Result:", result)
 }

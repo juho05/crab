@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"fmt"
-	"strings"
 )
 
 type ParseError struct {
@@ -12,25 +11,7 @@ type ParseError struct {
 }
 
 func (p ParseError) Error() string {
-	line := p.Line
-	if p.Token.Column+len([]rune(p.Token.Lexeme)) >= len(p.Line) {
-		line = append(line, []rune(strings.Repeat(" ", p.Token.Column+len([]rune(p.Token.Lexeme))-(len(p.Line)-1)))...)
-	}
-
-	length := len(line)
-	line = []rune(strings.TrimPrefix(strings.TrimPrefix(string(line), " "), "\t"))
-	columnStart := p.Token.Column - (length - len(line))
-	columnEnd := columnStart + len([]rune(p.Token.Lexeme))
-
-	errorLine := string(line[:columnStart])
-	errorLine = errorLine + "\x1b[4m\x1b[31m"
-	errorLine = errorLine + string(line[columnStart:columnEnd])
-	errorLine = errorLine + "\x1b[0m"
-	errorLine = errorLine + string(line[columnEnd:])
-
-	text := fmt.Sprintf("\x1b[2m[%d]  \x1b[0m%s", p.Token.Line, errorLine)
-	text = fmt.Sprintf("%s%s\n%s\n%s", fmt.Sprintf("[%d:%d]: %s\n", p.Token.Line+1, p.Token.Column+1, p.Message), strings.Repeat("-", 30), text, strings.Repeat("-", 30))
-	return text
+	return generateErrorText(p.Message, p.Line, p.Token.Line, p.Token.Column, p.Token.Column+len([]rune(p.Token.Lexeme)))
 }
 
 func (p parser) newError(message string) error {

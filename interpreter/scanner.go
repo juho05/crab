@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 )
 
 type scanner struct {
@@ -25,24 +24,7 @@ type ScanError struct {
 }
 
 func (s ScanError) Error() string {
-	lineText := s.LineText
-	if s.Column >= len(s.LineText) {
-		lineText = append(lineText, []rune(strings.Repeat(" ", s.Column-(len(s.LineText)-1)))...)
-	}
-
-	length := len(lineText)
-	lineText = []rune(strings.TrimPrefix(strings.TrimPrefix(string(lineText), " "), "\t"))
-	column := s.Column - (length - len(lineText))
-
-	errorLine := string(lineText[:column])
-	errorLine = errorLine + "\x1b[4m\x1b[31m"
-	errorLine = errorLine + string(lineText[column:column+1])
-	errorLine = errorLine + "\x1b[0m"
-	errorLine = errorLine + string(lineText[column+1:])
-
-	text := fmt.Sprintf("\x1b[2m[%d]  \x1b[0m%s", s.Line, errorLine)
-	text = fmt.Sprintf("%s%s\n%s\n%s", fmt.Sprintf("[%d:%d]: %s\n", s.Line+1, s.Column+1, s.Message), strings.Repeat("-", 30), text, strings.Repeat("-", 30))
-	return text
+	return generateErrorText(s.Message, s.LineText, s.Line, s.Column, s.Column+1)
 }
 
 func Scan(source io.Reader) ([]Token, [][]rune, error) {
