@@ -14,6 +14,15 @@ const (
 	OPEN_PAREN  TokenType = "OPEN_PAREN"
 	CLOSE_PAREN TokenType = "CLOSE_PAREN"
 
+	EQUAL         TokenType = "EQUAL"
+	EQUAL_EQUAL   TokenType = "EQUAL_EQUAL"
+	BANG          TokenType = "BANG"
+	BANG_EQUAL    TokenType = "BANG_EQUAL"
+	LESS          TokenType = "LESS"
+	LESS_EQUAL    TokenType = "LESS_EQUAL"
+	GREATER       TokenType = "GREATER"
+	GREATER_EQUAL TokenType = "GREATER_EQUAL"
+
 	NUMBER TokenType = "NUMBER"
 
 	EOF TokenType = "EOF"

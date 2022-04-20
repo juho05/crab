@@ -16,17 +16,6 @@ type scanner struct {
 	tokens           []Token
 }
 
-type ScanError struct {
-	Line     int
-	LineText []rune
-	Column   int
-	Message  string
-}
-
-func (s ScanError) Error() string {
-	return generateErrorText(s.Message, s.LineText, s.Line, s.Column, s.Column+1)
-}
-
 func Scan(source io.Reader) ([]Token, [][]rune, error) {
 	fileScanner := bufio.NewScanner(source)
 
@@ -61,6 +50,31 @@ func (s *scanner) scan() error {
 			s.addToken(OPEN_PAREN, nil)
 		case ')':
 			s.addToken(CLOSE_PAREN, nil)
+
+		case '=':
+			if s.match('=') {
+				s.addToken(EQUAL_EQUAL, nil)
+			} else {
+				s.addToken(EQUAL, nil)
+			}
+		case '!':
+			if s.match('=') {
+				s.addToken(BANG_EQUAL, nil)
+			} else {
+				s.addToken(BANG, nil)
+			}
+		case '<':
+			if s.match('=') {
+				s.addToken(LESS_EQUAL, nil)
+			} else {
+				s.addToken(LESS, nil)
+			}
+		case '>':
+			if s.match('=') {
+				s.addToken(GREATER_EQUAL, nil)
+			} else {
+				s.addToken(GREATER, nil)
+			}
 
 		case '/':
 			if s.match('/') {
@@ -201,6 +215,21 @@ func (s *scanner) addToken(tokenType TokenType, literal any) {
 	})
 }
 
+func isDigit(char rune) bool {
+	return char >= '0' && char <= '9'
+}
+
+type ScanError struct {
+	Line     int
+	LineText []rune
+	Column   int
+	Message  string
+}
+
+func (s ScanError) Error() string {
+	return generateErrorText(s.Message, s.LineText, s.Line, s.Column, s.Column+1)
+}
+
 func (s *scanner) newError(msg string) error {
 	return ScanError{
 		Line:     s.line,
@@ -208,8 +237,4 @@ func (s *scanner) newError(msg string) error {
 		Column:   s.currentColumn,
 		Message:  msg,
 	}
-}
-
-func isDigit(char rune) bool {
-	return char >= '0' && char <= '9'
 }

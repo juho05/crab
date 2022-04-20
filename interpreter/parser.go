@@ -4,32 +4,6 @@ import (
 	"fmt"
 )
 
-type ParseError struct {
-	Token   Token
-	Message string
-	Line    []rune
-}
-
-func (p ParseError) Error() string {
-	return generateErrorText(p.Message, p.Line, p.Token.Line, p.Token.Column, p.Token.Column+len([]rune(p.Token.Lexeme)))
-}
-
-func (p parser) newError(message string) error {
-	return ParseError{
-		Token:   p.peek(),
-		Message: message,
-		Line:    p.lines[p.peek().Line],
-	}
-}
-
-func (p parser) newErrorAt(message string, token Token) error {
-	return ParseError{
-		Token:   token,
-		Message: message,
-		Line:    p.lines[token.Line],
-	}
-}
-
 type parser struct {
 	tokens  []Token
 	current int
@@ -49,7 +23,51 @@ func (p *parser) parse() (Expr, error) {
 }
 
 func (p *parser) expression() (Expr, error) {
-	return p.term()
+	return p.equality()
+}
+
+func (p *parser) equality() (Expr, error) {
+	expr, err := p.comparison()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(EQUAL_EQUAL, BANG_EQUAL) {
+		operator := p.previous()
+		right, err := p.comparison()
+		if err != nil {
+			return nil, err
+		}
+		expr = ExprBinary{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+func (p *parser) comparison() (Expr, error) {
+	expr, err := p.term()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(LESS, LESS_EQUAL, GREATER, GREATER_EQUAL) {
+		operator := p.previous()
+		right, err := p.term()
+		if err != nil {
+			return nil, err
+		}
+		expr = ExprBinary{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *parser) term() (Expr, error) {
@@ -97,7 +115,7 @@ func (p *parser) factor() (Expr, error) {
 }
 
 func (p *parser) unary() (Expr, error) {
-	if p.match(MINUS) {
+	if p.match(BANG, MINUS) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
@@ -152,4 +170,30 @@ func (p *parser) previous() Token {
 
 func (p *parser) peek() Token {
 	return p.tokens[p.current]
+}
+
+type ParseError struct {
+	Token   Token
+	Message string
+	Line    []rune
+}
+
+func (p ParseError) Error() string {
+	return generateErrorText(p.Message, p.Line, p.Token.Line, p.Token.Column, p.Token.Column+len([]rune(p.Token.Lexeme)))
+}
+
+func (p parser) newError(message string) error {
+	return ParseError{
+		Token:   p.peek(),
+		Message: message,
+		Line:    p.lines[p.peek().Line],
+	}
+}
+
+func (p parser) newErrorAt(message string, token Token) error {
+	return ParseError{
+		Token:   token,
+		Message: message,
+		Line:    p.lines[token.Line],
+	}
 }

@@ -5,24 +5,6 @@ import (
 	"math"
 )
 
-type RuntimeError struct {
-	Token   Token
-	Message string
-	Line    []rune
-}
-
-func (r RuntimeError) Error() string {
-	return generateErrorText(r.Message, r.Line, r.Token.Line, r.Token.Column, r.Token.Column+len([]byte(r.Token.Lexeme)))
-}
-
-func (i *interpreter) newError(message string, token Token) error {
-	return RuntimeError{
-		Token:   token,
-		Message: message,
-		Line:    i.lines[token.Line],
-	}
-}
-
 type interpreter struct {
 	lines [][]rune
 }
@@ -54,6 +36,8 @@ func (i *interpreter) VisitUnary(expr ExprUnary) (any, error) {
 			return -right.(float64), nil
 		}
 		return nil, i.newError(fmt.Sprintf("Operand must be a number."), expr.Operator)
+	case BANG:
+		return !isTruthy(right), nil
 	default:
 		return nil, i.newError(fmt.Sprintf("Invalid unary operator '%s'.", expr.Operator.Lexeme), expr.Operator)
 	}
@@ -97,6 +81,33 @@ func (i *interpreter) VisitBinary(expr ExprBinary) (any, error) {
 			return math.Mod(left.(float64), right.(float64)), nil
 		}
 		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+
+	case EQUAL_EQUAL:
+		return left == right, nil
+	case BANG_EQUAL:
+		return left != right, nil
+
+	case LESS:
+		if isNumber(left, right) {
+			return left.(float64) < right.(float64), nil
+		}
+		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+	case LESS_EQUAL:
+		if isNumber(left, right) {
+			return left.(float64) <= right.(float64), nil
+		}
+		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+	case GREATER:
+		if isNumber(left, right) {
+			return left.(float64) > right.(float64), nil
+		}
+		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+	case GREATER_EQUAL:
+		if isNumber(left, right) {
+			return left.(float64) >= right.(float64), nil
+		}
+		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+
 	default:
 		return nil, i.newError(fmt.Sprintf("Invalid binary operator '%s'.", expr.Operator.Lexeme), expr.Operator)
 	}
@@ -118,4 +129,38 @@ func anyString(values ...any) bool {
 		}
 	}
 	return false
+}
+
+func isTruthy(value any) bool {
+	if v, ok := value.(bool); ok {
+		return v
+	}
+
+	if v, ok := value.(float64); ok {
+		return v != 0
+	}
+
+	if v, ok := value.(string); ok {
+		return len(v) > 0
+	}
+
+	return false
+}
+
+type RuntimeError struct {
+	Token   Token
+	Message string
+	Line    []rune
+}
+
+func (r RuntimeError) Error() string {
+	return generateErrorText(r.Message, r.Line, r.Token.Line, r.Token.Column, r.Token.Column+len([]byte(r.Token.Lexeme)))
+}
+
+func (i *interpreter) newError(message string, token Token) error {
+	return RuntimeError{
+		Token:   token,
+		Message: message,
+		Line:    i.lines[token.Line],
+	}
 }

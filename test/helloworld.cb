@@ -1,6 +1,1 @@
-// This is a comment
-/* This is a comment
-/*Nested comment*/
-*/
-(1 - -5 * (5+2)-9 /2)%2
-
+!(6/2 > 2+2)
