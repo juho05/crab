@@ -1,31 +1,5 @@
 func main() {
-	var hello = 5;
-	if (hello == 5) {
-		println("Success");
-	}
-	hello = 8;
-	if (hello) {
-		println("Success");
-	}
-	hello = 0;
-	if (!hello) {
-		println("Success");
-	} else {
-		println("Failure");
-	}
-
-	if (false) {
-		println("Failure");
-	} else if (false) {
-		println("Failure");
-	} else {
-		println("Success");
-	}
-
-	if (false)
-		println("Failure");
-	else if (true)
-		println("Success");
-	else
-		println("Failure");
+	println("Time:", millis(), "ms");
+	var name = input("What is your name? ");
+	println("Hello,", name + "!");
 }
