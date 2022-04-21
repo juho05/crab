@@ -128,6 +128,9 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(IF) {
 		return p.ifStmt()
 	}
+	if p.match(WHILE) {
+		return p.whileLoop()
+	}
 	return p.expressionStmt()
 }
 
@@ -162,6 +165,31 @@ func (p *parser) ifStmt() (Stmt, error) {
 		Condition: condition,
 		Body:      body,
 		ElseBody:  elseBody,
+	}, nil
+}
+
+func (p *parser) whileLoop() (Stmt, error) {
+	if !p.match(OPEN_PAREN) {
+		return nil, p.newError("Expect '(' after 'while'.")
+	}
+
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(CLOSE_PAREN) {
+		return nil, p.newError("Expect ')' after while condition.")
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	return &StmtWhile{
+		Condition: condition,
+		Body:      body,
 	}, nil
 }
 

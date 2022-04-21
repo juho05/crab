@@ -6,6 +6,7 @@ type StmtVisitor interface {
 	VisitVarDecl(stmt *StmtVarDecl) error
 	VisitFuncDecl(stmt *StmtFuncDecl) error
 	VisitIf(stmt *StmtIf) error
+	VisitWhile(stmt *StmtWhile) error
 }
 
 type Stmt interface {
@@ -55,4 +56,13 @@ type StmtIf struct {
 
 func (s *StmtIf) Accept(visitor StmtVisitor) error {
 	return visitor.VisitIf(s)
+}
+
+type StmtWhile struct {
+	Condition Expr
+	Body      Stmt
+}
+
+func (s *StmtWhile) Accept(visitor StmtVisitor) error {
+	return visitor.VisitWhile(s)
 }

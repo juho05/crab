@@ -1,10 +1,7 @@
-func hello() {
-
-}
-
 func main() {
-	println("Time:", millis(), "ms");
-	var name = input("What is your name? ");
-	println("Hello,", name + "!");
-	var test1 = "";
+	var counter = 0;
+	while (counter < 10) {
+		println(counter);
+		counter = counter + 1;
+	}
 }

@@ -131,6 +131,19 @@ func (c *checker) VisitIf(stmt *StmtIf) error {
 	return nil
 }
 
+func (c *checker) VisitWhile(stmt *StmtWhile) error {
+	_, err := stmt.Condition.Accept(c)
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Body.Accept(c)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *checker) VisitBlock(stmt *StmtBlock) error {
 	c.beginScope()
 	defer c.endScope()

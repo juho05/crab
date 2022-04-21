@@ -58,6 +58,17 @@ func (a ASTPrinter) VisitIf(stmt *StmtIf) error {
 	return PrinterResult(fmt.Sprintf("[if] if (%v)\n%s%s", condition, body, elseBody))
 }
 
+func (a ASTPrinter) VisitWhile(stmt *StmtWhile) error {
+	condition, _ := stmt.Condition.Accept(a)
+
+	body := stmt.Body.Accept(a).Error()
+	if !strings.HasPrefix(body, "{") {
+		body = fmt.Sprintf("{\n%v\n}", body)
+	}
+
+	return PrinterResult(fmt.Sprintf("[wh] while (%v)\n%s", condition, body))
+}
+
 func (a ASTPrinter) VisitBlock(stmt *StmtBlock) error {
 	str := fmt.Sprintf("{\n")
 	for _, s := range stmt.Statements {

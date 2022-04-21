@@ -94,6 +94,25 @@ func (i *interpreter) VisitIf(stmt *StmtIf) error {
 	return nil
 }
 
+func (i *interpreter) VisitWhile(stmt *StmtWhile) error {
+	condition, err := stmt.Condition.Accept(i)
+	if err != nil {
+		return err
+	}
+
+	for isTruthy(condition) {
+		err = stmt.Body.Accept(i)
+		if err != nil {
+			return err
+		}
+		condition, err = stmt.Condition.Accept(i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (i *interpreter) VisitBlock(stmt *StmtBlock) error {
 	i.beginScope()
 	defer i.endScope()
