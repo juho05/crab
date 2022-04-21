@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Bananenpro/crab/interpreter"
 )
@@ -50,9 +51,11 @@ func main() {
 	}
 
 	if *verbose {
+		fmt.Println(strings.Repeat("=", 50))
 		for _, stmt := range program {
 			fmt.Println(interpreter.PrintAST(stmt))
 		}
+		fmt.Println(strings.Repeat("=", 50))
 	}
 
 	err = interpreter.Interpret(program, lines)
