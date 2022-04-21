@@ -16,6 +16,7 @@ func Interpret(program []Stmt, lines [][]rune) error {
 		lines: lines,
 		env:   NewEnvironment(nil),
 	}
+	interpreter.env.registerNativeFunctions()
 
 	for _, stmt := range program {
 		err := stmt.Accept(interpreter)
@@ -32,11 +33,17 @@ func Interpret(program []Stmt, lines [][]rune) error {
 		return err
 	}
 	mainFunc, ok := main.(function)
-	if !ok {
+	if !ok || mainFunc.ArgumentCount() != 0 {
 		return errors.New("No main function.")
 	}
 
-	return mainFunc.Call(interpreter)
+	_, err = mainFunc.Call(interpreter, nil)
+	return err
+}
+
+func (i *interpreter) VisitExpression(stmt StmtExpression) error {
+	_, err := stmt.Expr.Accept(i)
+	return err
 }
 
 func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
@@ -91,6 +98,35 @@ func (i *interpreter) VisitBlock(stmt StmtBlock) error {
 
 func (i *interpreter) VisitLiteral(expr ExprLiteral) (any, error) {
 	return expr.Value, nil
+}
+
+func (i *interpreter) VisitVariable(variable ExprVariable) (any, error) {
+	return i.env.Get(variable.Name.Lexeme)
+}
+
+func (i *interpreter) VisitCall(call ExprCall) (any, error) {
+	expr, err := call.Callee.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	callable, ok := expr.(Callable)
+	if !ok {
+		return nil, i.newError("Can only call functions.", call.OpenParen)
+	}
+
+	if callable.ArgumentCount() != -1 && callable.ArgumentCount() != len(call.Args) {
+		return nil, i.newError(fmt.Sprintf("Wrong argument count. Expect %d, got %d.", callable.ArgumentCount(), len(call.Args)), call.OpenParen)
+	}
+
+	args := make([]any, len(call.Args))
+	for index, a := range call.Args {
+		args[index], err = a.Accept(i)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return callable.Call(i, args)
 }
 
 func (i *interpreter) VisitGrouping(expr ExprGrouping) (any, error) {

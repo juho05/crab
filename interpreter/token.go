@@ -34,6 +34,7 @@ const (
 	IDENTIFIER TokenType = "IDENTIFIER"
 
 	SEMICOLON TokenType = "SEMICOLON"
+	COMMA     TokenType = "COMMA"
 
 	TRUE  TokenType = "TRUE"
 	FALSE TokenType = "FALSE"

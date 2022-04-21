@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ASTPrinter struct{}
@@ -15,6 +16,11 @@ func (p PrinterResult) Error() string {
 func PrintAST(program Stmt) string {
 	result := program.Accept(ASTPrinter{})
 	return result.Error()
+}
+
+func (a ASTPrinter) VisitExpression(stmt StmtExpression) error {
+	expr, _ := stmt.Expr.Accept(a)
+	return PrinterResult(fmt.Sprintf("[ex] %v;", expr))
 }
 
 func (a ASTPrinter) VisitVarDecl(stmt StmtVarDecl) error {
@@ -48,6 +54,21 @@ func (a ASTPrinter) VisitLiteral(literal ExprLiteral) (any, error) {
 func (a ASTPrinter) VisitGrouping(grouping ExprGrouping) (any, error) {
 	expr, _ := grouping.Expr.Accept(a)
 	return fmt.Sprintf("%v", expr), nil
+}
+
+func (a ASTPrinter) VisitVariable(variable ExprVariable) (any, error) {
+	return fmt.Sprintf("(%s)", variable.Name.Lexeme), nil
+}
+
+func (a ASTPrinter) VisitCall(call ExprCall) (any, error) {
+	callee, _ := call.Callee.Accept(a)
+	args := ""
+	for _, arg := range call.Args {
+		argStr, _ := arg.Accept(a)
+		args = fmt.Sprintf("%s%v,", args, argStr)
+	}
+	args = strings.Trim(args, ",")
+	return fmt.Sprintf("(%s(%v))", callee, args), nil
 }
 
 func (a ASTPrinter) VisitUnary(unary ExprUnary) (any, error) {

@@ -1,7 +1,8 @@
 package interpreter
 
 type Callable interface {
-	Call(i *interpreter)
+	ArgumentCount() int
+	Call(i *interpreter, args []any) (any, error)
 }
 
 type function struct {
@@ -10,12 +11,16 @@ type function struct {
 	closure *Environment
 }
 
-func (f function) Call(i *interpreter) error {
+func (f function) ArgumentCount() int {
+	return 0
+}
+
+func (f function) Call(i *interpreter, args []any) (any, error) {
 	prevEnv := i.env
 
 	i.env = f.closure
 	err := f.body.Accept(i)
 	i.env = prevEnv
 
-	return err
+	return nil, err
 }

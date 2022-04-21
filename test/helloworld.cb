@@ -1,3 +1,8 @@
-func main() {
+func test() {
+	println("Test");
+}
 
+func main() {
+	println("Result:", 1 + 5);
+	test();
 }

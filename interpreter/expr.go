@@ -2,6 +2,8 @@ package interpreter
 
 type ExprVisitor interface {
 	VisitLiteral(expr ExprLiteral) (any, error)
+	VisitVariable(expr ExprVariable) (any, error)
+	VisitCall(expr ExprCall) (any, error)
 	VisitGrouping(expr ExprGrouping) (any, error)
 	VisitUnary(expr ExprUnary) (any, error)
 	VisitBinary(expr ExprBinary) (any, error)
@@ -18,6 +20,24 @@ type ExprLiteral struct {
 
 func (e ExprLiteral) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitLiteral(e)
+}
+
+type ExprVariable struct {
+	Name Token
+}
+
+func (e ExprVariable) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitVariable(e)
+}
+
+type ExprCall struct {
+	OpenParen Token
+	Callee    Expr
+	Args      []Expr
+}
+
+func (e ExprCall) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitCall(e)
 }
 
 type ExprGrouping struct {

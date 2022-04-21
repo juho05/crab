@@ -107,7 +107,22 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(OPEN_BRACE) {
 		return p.block()
 	}
-	return nil, p.newError("Expect statement")
+	return p.expressionStmt()
+}
+
+func (p *parser) expressionStmt() (Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Missing semicolon.")
+	}
+
+	return StmtExpression{
+		Expr: expr,
+	}, nil
 }
 
 func (p *parser) block() (Stmt, error) {
@@ -280,13 +295,54 @@ func (p *parser) unary() (Expr, error) {
 		}, nil
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+func (p *parser) call() (Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(OPEN_PAREN) {
+		openParen := p.previous()
+		args := make([]Expr, 0)
+		for p.peek().Type != CLOSE_PAREN {
+			arg, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+			if p.peek().Type == CLOSE_PAREN {
+				break
+			}
+			if !p.match(COMMA) {
+				return nil, p.newError("Expect ',' between arguments.")
+			}
+		}
+		if !p.match(CLOSE_PAREN) {
+			return nil, p.newError("Expect ')' after argument list.")
+		}
+		expr = ExprCall{
+			OpenParen: openParen,
+			Callee:    expr,
+			Args:      args,
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING, TRUE, FALSE) {
 		return ExprLiteral{
 			Value: p.previous().Literal,
+		}, nil
+	}
+
+	if p.match(IDENTIFIER) {
+		return ExprVariable{
+			Name: p.previous(),
 		}, nil
 	}
 

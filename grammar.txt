@@ -3,7 +3,8 @@
 program -> declaration*
 
 declaration -> varDecl | funcDecl | statement
-statement -> block
+statement -> block | expressionStmt
+expressionStmt -> expression ';'
 block -> '{' statement* '}'
 
 varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
@@ -17,5 +18,6 @@ comparison -> term (('>'|'>='|'<'|'<=') comparison)*
 term -> factor (('+'|'-') factor)*
 factor -> unary (('*'|'/'|'%') unary)*
 unary -> '-' unary | primary
-primary -> NUMBER | STRING | keyword | IDENTIFIER
-keyword -> "true" | "false"
+call -> primary '(' arguments? ')'
+arguments -> primary (',' primary)*
+primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' expression ')'
