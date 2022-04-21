@@ -67,7 +67,7 @@ func (p *parser) varDecl() (Stmt, error) {
 		return nil, p.newError("Missing semicolon.")
 	}
 
-	return StmtVarDecl{
+	return &StmtVarDecl{
 		Name: name,
 		Expr: expr,
 	}, nil
@@ -111,7 +111,7 @@ func (p *parser) funcDecl() (Stmt, error) {
 		return nil, err
 	}
 
-	return StmtFuncDecl{
+	return &StmtFuncDecl{
 		Name:       name,
 		Body:       block,
 		Parameters: parameters,
@@ -135,7 +135,7 @@ func (p *parser) expressionStmt() (Stmt, error) {
 		return nil, p.newError("Missing semicolon.")
 	}
 
-	return StmtExpression{
+	return &StmtExpression{
 		Expr: expr,
 	}, nil
 }
@@ -156,7 +156,7 @@ func (p *parser) block() (Stmt, error) {
 		return nil, p.newErrorAt("Block never closed.", openBrace)
 	}
 
-	return StmtBlock{
+	return &StmtBlock{
 		Statements: statements,
 	}, nil
 }
@@ -177,7 +177,7 @@ func (p *parser) or() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprLogical{
+		expr = &ExprLogical{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -199,7 +199,7 @@ func (p *parser) and() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprLogical{
+		expr = &ExprLogical{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -221,7 +221,7 @@ func (p *parser) equality() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprBinary{
+		expr = &ExprBinary{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -243,7 +243,7 @@ func (p *parser) comparison() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprBinary{
+		expr = &ExprBinary{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -265,7 +265,7 @@ func (p *parser) term() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprBinary{
+		expr = &ExprBinary{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -287,7 +287,7 @@ func (p *parser) factor() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ExprBinary{
+		expr = &ExprBinary{
 			Operator: operator,
 			Left:     expr,
 			Right:    right,
@@ -304,7 +304,7 @@ func (p *parser) unary() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ExprUnary{
+		return &ExprUnary{
 			Operator: operator,
 			Right:    right,
 		}, nil
@@ -338,7 +338,7 @@ func (p *parser) call() (Expr, error) {
 		if !p.match(CLOSE_PAREN) {
 			return nil, p.newError("Expect ')' after argument list.")
 		}
-		expr = ExprCall{
+		expr = &ExprCall{
 			OpenParen: openParen,
 			Callee:    expr,
 			Args:      args,
@@ -350,13 +350,13 @@ func (p *parser) call() (Expr, error) {
 
 func (p *parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING, TRUE, FALSE) {
-		return ExprLiteral{
+		return &ExprLiteral{
 			Value: p.previous().Literal,
 		}, nil
 	}
 
 	if p.match(IDENTIFIER) {
-		return ExprVariable{
+		return &ExprVariable{
 			Name: p.previous(),
 		}, nil
 	}
@@ -370,7 +370,7 @@ func (p *parser) primary() (Expr, error) {
 		if !p.match(CLOSE_PAREN) {
 			return nil, p.newErrorAt("Parenthesis never closed.", openingParen)
 		}
-		return ExprGrouping{
+		return &ExprGrouping{
 			Expr: expr,
 		}, nil
 	}
@@ -419,7 +419,7 @@ func (p ParseError) Error() string {
 	return generateErrorText(p.Message, p.Line, p.Token.Line, p.Token.Column, p.Token.Column+len([]rune(p.Token.Lexeme)))
 }
 
-func (p parser) newError(message string) error {
+func (p *parser) newError(message string) error {
 	return ParseError{
 		Token:   p.peek(),
 		Message: message,
@@ -427,7 +427,7 @@ func (p parser) newError(message string) error {
 	}
 }
 
-func (p parser) newErrorAt(message string, token Token) error {
+func (p *parser) newErrorAt(message string, token Token) error {
 	return ParseError{
 		Token:   token,
 		Message: message,

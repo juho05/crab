@@ -40,6 +40,7 @@ func main() {
 
 	if *verbose {
 		fmt.Println("Tokens:", tokens)
+		fmt.Println(strings.Repeat("=", 50))
 	}
 
 	program, errs := interpreter.Parse(tokens, lines)
@@ -50,8 +51,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = interpreter.Check(program, lines)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	if *verbose {
-		fmt.Println(strings.Repeat("=", 50))
 		for _, stmt := range program {
 			fmt.Println(interpreter.PrintAST(stmt))
 		}

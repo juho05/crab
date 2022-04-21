@@ -1,13 +1,13 @@
 package interpreter
 
 type ExprVisitor interface {
-	VisitLiteral(expr ExprLiteral) (any, error)
-	VisitVariable(expr ExprVariable) (any, error)
-	VisitCall(expr ExprCall) (any, error)
-	VisitGrouping(expr ExprGrouping) (any, error)
-	VisitUnary(expr ExprUnary) (any, error)
-	VisitBinary(expr ExprBinary) (any, error)
-	VisitLogical(expr ExprLogical) (any, error)
+	VisitLiteral(expr *ExprLiteral) (any, error)
+	VisitVariable(expr *ExprVariable) (any, error)
+	VisitCall(expr *ExprCall) (any, error)
+	VisitGrouping(expr *ExprGrouping) (any, error)
+	VisitUnary(expr *ExprUnary) (any, error)
+	VisitBinary(expr *ExprBinary) (any, error)
+	VisitLogical(expr *ExprLogical) (any, error)
 }
 
 type Expr interface {
@@ -18,15 +18,16 @@ type ExprLiteral struct {
 	Value any
 }
 
-func (e ExprLiteral) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprLiteral) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitLiteral(e)
 }
 
 type ExprVariable struct {
-	Name Token
+	Name         Token
+	NestingLevel int
 }
 
-func (e ExprVariable) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprVariable) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitVariable(e)
 }
 
@@ -36,7 +37,7 @@ type ExprCall struct {
 	Args      []Expr
 }
 
-func (e ExprCall) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprCall) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitCall(e)
 }
 
@@ -44,7 +45,7 @@ type ExprGrouping struct {
 	Expr Expr
 }
 
-func (e ExprGrouping) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprGrouping) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitGrouping(e)
 }
 
@@ -53,7 +54,7 @@ type ExprUnary struct {
 	Right    Expr
 }
 
-func (e ExprUnary) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprUnary) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitUnary(e)
 }
 
@@ -63,7 +64,7 @@ type ExprBinary struct {
 	Right    Expr
 }
 
-func (e ExprBinary) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprBinary) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitBinary(e)
 }
 
@@ -73,6 +74,6 @@ type ExprLogical struct {
 	Right    Expr
 }
 
-func (e ExprLogical) Accept(visitor ExprVisitor) (any, error) {
+func (e *ExprLogical) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitLogical(e)
 }

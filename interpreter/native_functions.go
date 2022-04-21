@@ -10,6 +10,11 @@ func (e *Environment) registerNativeFunctions() {
 	e.Define("println", funcPrintln{})
 }
 
+func registerNativeFunctions(m map[string]variableState) {
+	m["print"] = variableStateUsed
+	m["println"] = variableStateUsed
+}
+
 type funcPrint struct{}
 
 func (p funcPrint) ArgumentCount() int {

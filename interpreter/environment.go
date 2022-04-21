@@ -8,45 +8,48 @@ var (
 )
 
 type Environment struct {
-	parent *Environment
-	names  map[string]any
+	parent       *Environment
+	names        map[string]any
+	nestingLevel int
 }
 
 func NewEnvironment(parent *Environment) *Environment {
+	nestingLevel := 0
+	if parent != nil {
+		nestingLevel = parent.nestingLevel + 1
+	}
 	return &Environment{
-		parent: parent,
-		names:  make(map[string]any),
+		parent:       parent,
+		names:        make(map[string]any),
+		nestingLevel: nestingLevel,
 	}
 }
 
 func (e *Environment) Define(name string, value any) error {
-	if _, ok := e.names[name]; ok {
+	if e.Exists(name) {
 		return ErrAlreadyDefined
 	}
 	e.names[name] = value
 	return nil
 }
 
-func (e *Environment) Assign(name string, value any) error {
-	if _, ok := e.names[name]; !ok {
-		if e.parent == nil {
-			return ErrUndefined
-		} else {
-			return e.parent.Assign(name, value)
-		}
+func (e *Environment) Assign(name string, value any, nestingLevel int) {
+	env := e
+	for nestingLevel != env.nestingLevel {
+		env = env.parent
 	}
-	e.names[name] = value
-	return nil
+	env.names[name] = value
 }
 
-func (e *Environment) Get(name string) (any, error) {
-	value, ok := e.names[name]
-	if !ok {
-		if e.parent == nil {
-			return nil, ErrUndefined
-		} else {
-			return e.parent.Get(name)
-		}
+func (e *Environment) Get(name string, nestingLevel int) any {
+	env := e
+	for nestingLevel != env.nestingLevel {
+		env = env.parent
 	}
-	return value, nil
+	return env.names[name]
+}
+
+func (e *Environment) Exists(name string) bool {
+	_, ok := e.names[name]
+	return ok
 }

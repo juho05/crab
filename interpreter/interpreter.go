@@ -25,28 +25,25 @@ func Interpret(program []Stmt, lines [][]rune) error {
 		}
 	}
 
-	main, err := interpreter.env.Get("main")
-	if err != nil {
-		if err == ErrUndefined {
-			return errors.New("No main function.")
-		}
-		return err
+	if !interpreter.env.Exists("main") {
+		return errors.New("No main function.")
 	}
+	main := interpreter.env.Get("main", 0)
 	mainFunc, ok := main.(function)
 	if !ok || mainFunc.ArgumentCount() != 0 {
 		return errors.New("No main function.")
 	}
 
-	_, err = mainFunc.Call(interpreter, nil)
+	_, err := mainFunc.Call(interpreter, nil)
 	return err
 }
 
-func (i *interpreter) VisitExpression(stmt StmtExpression) error {
+func (i *interpreter) VisitExpression(stmt *StmtExpression) error {
 	_, err := stmt.Expr.Accept(i)
 	return err
 }
 
-func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
+func (i *interpreter) VisitVarDecl(stmt *StmtVarDecl) error {
 	var value any
 	var err error
 	if stmt.Expr != nil {
@@ -67,7 +64,7 @@ func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
 	return nil
 }
 
-func (i *interpreter) VisitFuncDecl(stmt StmtFuncDecl) error {
+func (i *interpreter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	err := i.env.Define(stmt.Name.Lexeme, function{
 		name:       stmt.Name,
 		body:       stmt.Body,
@@ -83,7 +80,7 @@ func (i *interpreter) VisitFuncDecl(stmt StmtFuncDecl) error {
 	return nil
 }
 
-func (i *interpreter) VisitBlock(stmt StmtBlock) error {
+func (i *interpreter) VisitBlock(stmt *StmtBlock) error {
 	i.beginScope()
 	defer i.endScope()
 
@@ -97,15 +94,15 @@ func (i *interpreter) VisitBlock(stmt StmtBlock) error {
 	return nil
 }
 
-func (i *interpreter) VisitLiteral(expr ExprLiteral) (any, error) {
+func (i *interpreter) VisitLiteral(expr *ExprLiteral) (any, error) {
 	return expr.Value, nil
 }
 
-func (i *interpreter) VisitVariable(variable ExprVariable) (any, error) {
-	return i.env.Get(variable.Name.Lexeme)
+func (i *interpreter) VisitVariable(variable *ExprVariable) (any, error) {
+	return i.env.Get(variable.Name.Lexeme, variable.NestingLevel), nil
 }
 
-func (i *interpreter) VisitCall(call ExprCall) (any, error) {
+func (i *interpreter) VisitCall(call *ExprCall) (any, error) {
 	expr, err := call.Callee.Accept(i)
 	if err != nil {
 		return nil, err
@@ -130,11 +127,11 @@ func (i *interpreter) VisitCall(call ExprCall) (any, error) {
 	return callable.Call(i, args)
 }
 
-func (i *interpreter) VisitGrouping(expr ExprGrouping) (any, error) {
+func (i *interpreter) VisitGrouping(expr *ExprGrouping) (any, error) {
 	return expr.Expr.Accept(i)
 }
 
-func (i *interpreter) VisitUnary(expr ExprUnary) (any, error) {
+func (i *interpreter) VisitUnary(expr *ExprUnary) (any, error) {
 	right, err := expr.Right.Accept(i)
 	if err != nil {
 		return nil, err
@@ -153,7 +150,7 @@ func (i *interpreter) VisitUnary(expr ExprUnary) (any, error) {
 	}
 }
 
-func (i *interpreter) VisitBinary(expr ExprBinary) (any, error) {
+func (i *interpreter) VisitBinary(expr *ExprBinary) (any, error) {
 	left, err := expr.Left.Accept(i)
 	if err != nil {
 		return nil, err
@@ -223,7 +220,7 @@ func (i *interpreter) VisitBinary(expr ExprBinary) (any, error) {
 	}
 }
 
-func (i *interpreter) VisitLogical(expr ExprLogical) (any, error) {
+func (i *interpreter) VisitLogical(expr *ExprLogical) (any, error) {
 	left, err := expr.Left.Accept(i)
 	if err != nil {
 		return nil, err
