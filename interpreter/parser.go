@@ -8,43 +8,49 @@ type parser struct {
 	tokens  []Token
 	current int
 	lines   [][]rune
+	errors  []error
 }
 
 func Parse(tokens []Token, lines [][]rune) ([]Stmt, []error) {
 	parser := &parser{
 		tokens: tokens,
 		lines:  lines,
+		errors: make([]error, 0),
 	}
 	return parser.parse()
 }
 
 func (p *parser) parse() ([]Stmt, []error) {
-	parseErrors := make([]error, 0)
 	statements := make([]Stmt, 0)
 	for p.peek().Type != EOF {
-		stmt, err := p.declaration(false)
-		if err != nil {
-			parseErrors = append(parseErrors, err)
-			p.synchronize()
-			continue
-		}
-		statements = append(statements, stmt)
+		statements = append(statements, p.declaration(false))
 	}
-	return statements, parseErrors
+	return statements, p.errors
 }
 
-func (p *parser) declaration(allowNonDeclarationStatements bool) (Stmt, error) {
+func (p *parser) declaration(allowNonDeclarationStatements bool) Stmt {
+	var stmt Stmt
+	var err error
 	if p.match(VAR) {
-		return p.varDecl()
+		stmt, err = p.varDecl()
 	}
 	if p.match(FUNC) {
-		return p.funcDecl()
+		stmt, err = p.funcDecl()
 	}
 
 	if allowNonDeclarationStatements {
-		return p.statement()
+		stmt, err = p.statement()
 	}
-	return nil, p.newError(fmt.Sprintf("Unexpected token '%s'", p.peek().Lexeme))
+
+	if stmt == nil && err == nil {
+		err = p.newError(fmt.Sprintf("Unexpected token '%s'", p.peek().Lexeme))
+	}
+
+	if err != nil {
+		p.errors = append(p.errors, err)
+		p.synchronize()
+	}
+	return stmt
 }
 
 func (p *parser) varDecl() (Stmt, error) {
@@ -145,10 +151,7 @@ func (p *parser) block() (Stmt, error) {
 	statements := make([]Stmt, 0)
 
 	for p.peek().Type != CLOSE_BRACE && p.peek().Type != EOF {
-		stmt, err := p.declaration(true)
-		if err != nil {
-			return nil, err
-		}
+		stmt := p.declaration(true)
 		statements = append(statements, stmt)
 	}
 
@@ -397,15 +400,19 @@ func (p *parser) peek() Token {
 }
 
 func (p *parser) synchronize() {
+	if p.peek().Type == EOF {
+		return
+	}
+	p.current++
 	for p.peek().Type != EOF {
-		p.current++
 		switch p.peek().Type {
 		case SEMICOLON:
+			p.current++
 			return
-		case VAR:
-			p.current--
+		case VAR, FUNC:
 			return
 		}
+		p.current++
 	}
 }
 
