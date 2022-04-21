@@ -1,4 +1,4 @@
-# crab
+# crab 🦀
 
 A dynamically typed interpreted programming language.
 
