@@ -107,6 +107,9 @@ func (s *scanner) scan() error {
 				s.addToken(SLASH, nil)
 			}
 
+		case ';':
+			s.addToken(SEMICOLON, nil)
+
 		case '"':
 			s.string()
 
@@ -179,6 +182,8 @@ func (s *scanner) identifier() {
 		s.addToken(TRUE, true)
 	case "false":
 		s.addToken(FALSE, false)
+	case "var":
+		s.addToken(VAR, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

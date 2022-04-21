@@ -7,13 +7,44 @@ import (
 
 type interpreter struct {
 	lines [][]rune
+	env   *Environment
 }
 
-func Interpret(program Expr, lines [][]rune) (any, error) {
+func Interpret(program []Stmt, lines [][]rune) error {
 	interpreter := &interpreter{
 		lines: lines,
+		env:   NewEnvironment(nil),
 	}
-	return program.Accept(interpreter)
+
+	for _, stmt := range program {
+		err := stmt.Accept(interpreter)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
+	var value any
+	var err error
+	if stmt.Expr != nil {
+		value, err = stmt.Expr.Accept(i)
+		if err != nil {
+			return nil
+		}
+	}
+
+	err = i.env.Define(stmt.Name.Lexeme, value)
+	if err != nil {
+		if err == ErrAlreadyDefined {
+			return i.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
+		}
+		return i.newError(err.Error(), stmt.Name)
+	}
+
+	return nil
 }
 
 func (i *interpreter) VisitLiteral(expr ExprLiteral) (any, error) {

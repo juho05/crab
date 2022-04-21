@@ -41,21 +41,23 @@ func main() {
 		fmt.Println("Tokens:", tokens)
 	}
 
-	program, err := interpreter.Parse(tokens, lines)
-	if err != nil {
+	program, errs := interpreter.Parse(tokens, lines)
+	for _, err := range errs {
 		fmt.Fprintln(os.Stderr, err)
+	}
+	if len(errs) > 0 {
 		os.Exit(1)
 	}
 
 	if *verbose {
-		fmt.Println("Program:", interpreter.PrintAST(program))
+		for _, stmt := range program {
+			fmt.Println(interpreter.PrintAST(stmt))
+		}
 	}
 
-	result, err := interpreter.Interpret(program, lines)
+	err = interpreter.Interpret(program, lines)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-
-	fmt.Println("Result:", result)
 }

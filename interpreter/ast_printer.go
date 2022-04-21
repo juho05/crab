@@ -12,13 +12,23 @@ func (p PrinterResult) Error() string {
 	return string(p)
 }
 
-func PrintAST(program Expr) string {
-	result, _ := program.Accept(ASTPrinter{})
-	return result.(string)
+func PrintAST(program Stmt) string {
+	result := program.Accept(ASTPrinter{})
+	return result.Error()
+}
+
+func (a ASTPrinter) VisitVarDecl(stmt StmtVarDecl) error {
+	var expr any
+	if stmt.Expr != nil {
+		expr, _ = stmt.Expr.Accept(a)
+	} else {
+		expr = toString(nil)
+	}
+	return PrinterResult(fmt.Sprintf("[va] var %s = %v;", stmt.Name.Lexeme, expr))
 }
 
 func (a ASTPrinter) VisitLiteral(literal ExprLiteral) (any, error) {
-	return literalToString(literal), nil
+	return toString(literal.Value), nil
 }
 
 func (a ASTPrinter) VisitGrouping(grouping ExprGrouping) (any, error) {
@@ -43,9 +53,12 @@ func (a ASTPrinter) VisitLogical(logical ExprLogical) (any, error) {
 	return fmt.Sprintf("(%v %s %v)", left, logical.Operator.Lexeme, right), nil
 }
 
-func literalToString(literal ExprLiteral) string {
-	if _, ok := literal.Value.(string); ok {
-		return fmt.Sprintf("\"%v\"", literal.Value)
+func toString(value any) string {
+	if _, ok := value.(string); ok {
+		return fmt.Sprintf("\"%v\"", value)
 	}
-	return fmt.Sprintf("%v", literal.Value)
+	if value == nil {
+		return fmt.Sprintf("null")
+	}
+	return fmt.Sprintf("%v", value)
 }

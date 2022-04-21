@@ -10,7 +10,7 @@ type parser struct {
 	lines   [][]rune
 }
 
-func Parse(tokens []Token, lines [][]rune) (Expr, error) {
+func Parse(tokens []Token, lines [][]rune) ([]Stmt, []error) {
 	parser := &parser{
 		tokens: tokens,
 		lines:  lines,
@@ -18,8 +18,53 @@ func Parse(tokens []Token, lines [][]rune) (Expr, error) {
 	return parser.parse()
 }
 
-func (p *parser) parse() (Expr, error) {
-	return p.expression()
+func (p *parser) parse() ([]Stmt, []error) {
+	parseErrors := make([]error, 0)
+	statements := make([]Stmt, 0)
+	for p.peek().Type != EOF {
+		stmt, err := p.declaration()
+		if err != nil {
+			parseErrors = append(parseErrors, err)
+			p.synchronize()
+			continue
+		}
+		statements = append(statements, stmt)
+	}
+	return statements, parseErrors
+}
+
+func (p *parser) declaration() (Stmt, error) {
+	if p.match(VAR) {
+		return p.varDecl()
+	}
+
+	return nil, p.newError(fmt.Sprintf("Unexpected token '%s'", p.peek().Lexeme))
+}
+
+func (p *parser) varDecl() (Stmt, error) {
+	if !p.match(IDENTIFIER) {
+		return nil, p.newError("Expect identifier after 'var' keyword.")
+	}
+
+	name := p.previous()
+
+	var expr Expr
+	var err error
+	if p.match(EQUAL) {
+		expr, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Missing semicolon.")
+	}
+
+	return StmtVarDecl{
+		Name: name,
+		Expr: expr,
+	}, nil
 }
 
 func (p *parser) expression() (Expr, error) {
@@ -214,6 +259,20 @@ func (p *parser) previous() Token {
 
 func (p *parser) peek() Token {
 	return p.tokens[p.current]
+}
+
+func (p *parser) synchronize() {
+	p.current++
+	for p.peek().Type != EOF {
+		switch p.peek().Type {
+		case SEMICOLON:
+			p.current++
+			return
+		case VAR:
+			return
+		}
+		p.current++
+	}
 }
 
 type ParseError struct {

@@ -1,5 +1,9 @@
 ============ Crab Formal Grammar ============
 
+program -> declaration*
+declaration -> varDecl
+varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
+
 expression -> or
 or -> and (('||'|'^^') and)*
 and -> equality ('&&' equality)*

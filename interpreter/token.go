@@ -31,8 +31,11 @@ const (
 	STRING     TokenType = "STRING"
 	IDENTIFIER TokenType = "IDENTIFIER"
 
-	TRUE  = "TRUE"
-	FALSE = "FALSE"
+	SEMICOLON TokenType = "SEMICOLON"
+
+	TRUE  TokenType = "TRUE"
+	FALSE TokenType = "FALSE"
+	VAR   TokenType = "VAR"
 
 	EOF TokenType = "EOF"
 )
