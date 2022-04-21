@@ -248,6 +248,15 @@ func (i *interpreter) VisitLogical(expr *ExprLogical) (any, error) {
 	return isTruthy(right), nil
 }
 
+func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
+	value, err := expr.Expr.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	i.env.Assign(expr.Name.Lexeme, value, expr.NestingLevel)
+	return value, nil
+}
+
 func isNumber(values ...any) bool {
 	for _, v := range values {
 		if _, ok := v.(float64); !ok {

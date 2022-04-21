@@ -8,6 +8,7 @@ type ExprVisitor interface {
 	VisitUnary(expr *ExprUnary) (any, error)
 	VisitBinary(expr *ExprBinary) (any, error)
 	VisitLogical(expr *ExprLogical) (any, error)
+	VisitAssign(expr *ExprAssign) (any, error)
 }
 
 type Expr interface {
@@ -76,4 +77,14 @@ type ExprLogical struct {
 
 func (e *ExprLogical) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitLogical(e)
+}
+
+type ExprAssign struct {
+	Name         Token
+	NestingLevel int
+	Expr         Expr
+}
+
+func (e *ExprAssign) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitAssign(e)
 }

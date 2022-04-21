@@ -88,6 +88,11 @@ func (a ASTPrinter) VisitLogical(logical *ExprLogical) (any, error) {
 	return fmt.Sprintf("(%v %s %v)", left, logical.Operator.Lexeme, right), nil
 }
 
+func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
+	right, _ := assign.Expr.Accept(a)
+	return fmt.Sprintf("((%s:%d) = %v)", assign.Name.Lexeme, assign.NestingLevel, right), nil
+}
+
 func toString(value any) string {
 	if _, ok := value.(string); ok {
 		return fmt.Sprintf("\"%v\"", value)

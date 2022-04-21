@@ -136,6 +136,15 @@ func (c *checker) VisitLogical(expr *ExprLogical) (any, error) {
 	return expr.Right.Accept(c)
 }
 
+func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
+	scope := c.findVariable(assign.Name.Lexeme)
+	if scope < 0 {
+		return nil, c.newError("Undefined name.", assign.Name)
+	}
+	assign.NestingLevel = scope
+	return assign.Expr.Accept(c)
+}
+
 func (c *checker) beginScope() {
 	c.scopes = append(c.scopes, make(map[string]variableState))
 	c.scope++

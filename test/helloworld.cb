@@ -1,7 +1,6 @@
-func sayHello(greeting, name) {
-	println(greeting, name);
-}
-
 func main() {
-	sayHello("Hello", "World");
+	var hello = 5;
+	println(hello);
+	hello = 8;
+	println(hello);
 }

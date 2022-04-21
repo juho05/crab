@@ -12,7 +12,8 @@ varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
 funcDecl -> 'func' IDENTIFIER '(' parameters? ')' block
 parameters -> IDENTIFIER (',' IDENTIFIER)*
 
-expression -> or
+expression -> assign
+assign -> IDENTIFIER '=' assign | or
 or -> and (('||'|'^^') and)*
 and -> equality ('&&' equality)*
 equality -> comparison (('=='|'!=') comparison)*

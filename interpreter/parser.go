@@ -33,12 +33,9 @@ func (p *parser) declaration(allowNonDeclarationStatements bool) Stmt {
 	var err error
 	if p.match(VAR) {
 		stmt, err = p.varDecl()
-	}
-	if p.match(FUNC) {
+	} else if p.match(FUNC) {
 		stmt, err = p.funcDecl()
-	}
-
-	if allowNonDeclarationStatements {
+	} else if allowNonDeclarationStatements {
 		stmt, err = p.statement()
 	}
 
@@ -165,7 +162,30 @@ func (p *parser) block() (Stmt, error) {
 }
 
 func (p *parser) expression() (Expr, error) {
-	return p.or()
+	return p.assign()
+}
+
+func (p *parser) assign() (Expr, error) {
+	expr, err := p.or()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(EQUAL) {
+		if v, ok := expr.(*ExprVariable); ok {
+			right, err := p.assign()
+			if err != nil {
+				return nil, err
+			}
+			return &ExprAssign{
+				Name: v.Name,
+				Expr: right,
+			}, nil
+		}
+		return nil, p.newError("Can only assign to variables.")
+	}
+
+	return expr, nil
 }
 
 func (p *parser) or() (Expr, error) {
