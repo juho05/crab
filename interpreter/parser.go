@@ -125,7 +125,44 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(OPEN_BRACE) {
 		return p.block()
 	}
+	if p.match(IF) {
+		return p.ifStmt()
+	}
 	return p.expressionStmt()
+}
+
+func (p *parser) ifStmt() (Stmt, error) {
+	if !p.match(OPEN_PAREN) {
+		return nil, p.newError("Expect '(' after 'if'.")
+	}
+
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(CLOSE_PAREN) {
+		return nil, p.newError("Expect ')' after if condition.")
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	var elseBody Stmt
+	if p.match(ELSE) {
+		elseBody, err = p.statement()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &StmtIf{
+		Condition: condition,
+		Body:      body,
+		ElseBody:  elseBody,
+	}, nil
 }
 
 func (p *parser) expressionStmt() (Stmt, error) {
@@ -429,7 +466,7 @@ func (p *parser) synchronize() {
 		case SEMICOLON:
 			p.current++
 			return
-		case VAR, FUNC:
+		case VAR, FUNC, IF:
 			return
 		}
 		p.current++

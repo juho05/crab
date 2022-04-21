@@ -80,6 +80,20 @@ func (i *interpreter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	return nil
 }
 
+func (i *interpreter) VisitIf(stmt *StmtIf) error {
+	condition, err := stmt.Condition.Accept(i)
+	if err != nil {
+		return err
+	}
+
+	if isTruthy(condition) {
+		return stmt.Body.Accept(i)
+	} else if stmt.ElseBody != nil {
+		return stmt.ElseBody.Accept(i)
+	}
+	return nil
+}
+
 func (i *interpreter) VisitBlock(stmt *StmtBlock) error {
 	i.beginScope()
 	defer i.endScope()

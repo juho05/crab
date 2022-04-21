@@ -40,6 +40,8 @@ const (
 	FALSE TokenType = "FALSE"
 	VAR   TokenType = "VAR"
 	FUNC  TokenType = "FUNC"
+	IF    TokenType = "IF"
+	ELSE  TokenType = "ELSE"
 
 	EOF TokenType = "EOF"
 )

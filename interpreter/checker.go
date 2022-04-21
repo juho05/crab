@@ -71,6 +71,26 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	return stmt.Body.Accept(c)
 }
 
+func (c *checker) VisitIf(stmt *StmtIf) error {
+	_, err := stmt.Condition.Accept(c)
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Body.Accept(c)
+	if err != nil {
+		return err
+	}
+
+	if stmt.ElseBody != nil {
+		err = stmt.ElseBody.Accept(c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *checker) VisitBlock(stmt *StmtBlock) error {
 	c.beginScope()
 	defer c.endScope()

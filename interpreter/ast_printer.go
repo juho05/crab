@@ -38,6 +38,26 @@ func (a ASTPrinter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	return PrinterResult(fmt.Sprintf("[fn] fun %s() %s", stmt.Name.Lexeme, body))
 }
 
+func (a ASTPrinter) VisitIf(stmt *StmtIf) error {
+	condition, _ := stmt.Condition.Accept(a)
+
+	body := stmt.Body.Accept(a).Error()
+	if !strings.HasPrefix(body, "{") {
+		body = fmt.Sprintf("{\n%v\n}", body)
+	}
+
+	elseBody := ""
+	if stmt.ElseBody != nil {
+		elseBody = stmt.ElseBody.Accept(a).Error()
+		if !strings.HasPrefix(elseBody, "{") {
+			elseBody = fmt.Sprintf("{\n%v\n}", elseBody)
+		}
+		elseBody = fmt.Sprintf("\nelse\n%s", elseBody)
+	}
+
+	return PrinterResult(fmt.Sprintf("[if] if (%v)\n%s%s", condition, body, elseBody))
+}
+
 func (a ASTPrinter) VisitBlock(stmt *StmtBlock) error {
 	str := fmt.Sprintf("{\n")
 	for _, s := range stmt.Statements {

@@ -192,6 +192,10 @@ func (s *scanner) identifier() {
 		s.addToken(VAR, nil)
 	case "func":
 		s.addToken(FUNC, nil)
+	case "if":
+		s.addToken(IF, nil)
+	case "else":
+		s.addToken(ELSE, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

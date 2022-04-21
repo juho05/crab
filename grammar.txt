@@ -4,13 +4,15 @@ program -> declaration*
 
 declarationOrStatement -> declaration | statement
 declaration -> varDecl | funcDecl
-statement -> block | expressionStmt
+statement -> if | block | expressionStmt
 expressionStmt -> expression ';'
 block -> '{' declarationOrStatement* '}'
 
 varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
 funcDecl -> 'func' IDENTIFIER '(' parameters? ')' block
 parameters -> IDENTIFIER (',' IDENTIFIER)*
+
+if -> 'if' '(' expression ')' statement
 
 expression -> assign
 assign -> IDENTIFIER '=' assign | or
