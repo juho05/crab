@@ -47,6 +47,34 @@ func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
 	return nil
 }
 
+func (i *interpreter) VisitFuncDecl(stmt StmtFuncDecl) error {
+	err := i.env.Define(stmt.Name.Lexeme, function{
+		name: stmt.Name,
+		body: stmt.Body,
+	})
+	if err != nil {
+		if err == ErrAlreadyDefined {
+			return i.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
+		}
+		return i.newError(err.Error(), stmt.Name)
+	}
+	return nil
+}
+
+func (i *interpreter) VisitBlock(stmt StmtBlock) error {
+	i.beginScope()
+	defer i.endScope()
+
+	for _, s := range stmt.Statements {
+		err := s.Accept(i)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (i *interpreter) VisitLiteral(expr ExprLiteral) (any, error) {
 	return expr.Value, nil
 }
@@ -204,6 +232,14 @@ func isTruthy(value any) bool {
 	}
 
 	return false
+}
+
+func (i *interpreter) beginScope() {
+	i.env = NewEnvironment(i.env)
+}
+
+func (i *interpreter) endScope() {
+	i.env = i.env.parent
 }
 
 type RuntimeError struct {

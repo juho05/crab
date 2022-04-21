@@ -22,7 +22,7 @@ func (p *parser) parse() ([]Stmt, []error) {
 	parseErrors := make([]error, 0)
 	statements := make([]Stmt, 0)
 	for p.peek().Type != EOF {
-		stmt, err := p.declaration()
+		stmt, err := p.declaration(false)
 		if err != nil {
 			parseErrors = append(parseErrors, err)
 			p.synchronize()
@@ -33,11 +33,17 @@ func (p *parser) parse() ([]Stmt, []error) {
 	return statements, parseErrors
 }
 
-func (p *parser) declaration() (Stmt, error) {
+func (p *parser) declaration(allowNonDeclarationStatements bool) (Stmt, error) {
 	if p.match(VAR) {
 		return p.varDecl()
 	}
+	if p.match(FUNC) {
+		return p.funcDecl()
+	}
 
+	if allowNonDeclarationStatements {
+		return p.statement()
+	}
 	return nil, p.newError(fmt.Sprintf("Unexpected token '%s'", p.peek().Lexeme))
 }
 
@@ -64,6 +70,64 @@ func (p *parser) varDecl() (Stmt, error) {
 	return StmtVarDecl{
 		Name: name,
 		Expr: expr,
+	}, nil
+}
+
+func (p *parser) funcDecl() (Stmt, error) {
+	if !p.match(IDENTIFIER) {
+		return nil, p.newError("Expect identifier after 'func' keyword.")
+	}
+
+	name := p.previous()
+
+	if !p.match(OPEN_PAREN) {
+		return nil, p.newError("Expect '(' after function name.")
+	}
+
+	if !p.match(CLOSE_PAREN) {
+		return nil, p.newError("Expect ')' after function parameter list.")
+	}
+
+	if !p.match(OPEN_BRACE) {
+		return nil, p.newError("Expect block after function signature.")
+	}
+
+	block, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	return StmtFuncDecl{
+		Name: name,
+		Body: block,
+	}, nil
+}
+
+func (p *parser) statement() (Stmt, error) {
+	if p.match(OPEN_BRACE) {
+		return p.block()
+	}
+	return nil, p.newError("Expect statement")
+}
+
+func (p *parser) block() (Stmt, error) {
+	openBrace := p.previous()
+	statements := make([]Stmt, 0)
+
+	for p.peek().Type != CLOSE_BRACE && p.peek().Type != EOF {
+		stmt, err := p.declaration(true)
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+
+	if !p.match(CLOSE_BRACE) {
+		return nil, p.newErrorAt("Block never closed.", openBrace)
+	}
+
+	return StmtBlock{
+		Statements: statements,
 	}, nil
 }
 
@@ -262,16 +326,15 @@ func (p *parser) peek() Token {
 }
 
 func (p *parser) synchronize() {
-	p.current++
 	for p.peek().Type != EOF {
+		p.current++
 		switch p.peek().Type {
 		case SEMICOLON:
-			p.current++
 			return
 		case VAR:
+			p.current--
 			return
 		}
-		p.current++
 	}
 }
 

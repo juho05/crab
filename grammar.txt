@@ -1,8 +1,13 @@
 ============ Crab Formal Grammar ============
 
 program -> declaration*
-declaration -> varDecl
+
+declaration -> varDecl | funcDecl | statement
+statement -> block
+block -> '{' statement* '}'
+
 varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
+funcDecl -> 'func' IDENTIFIER '(' ')' block
 
 expression -> or
 or -> and (('||'|'^^') and)*

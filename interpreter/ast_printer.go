@@ -27,6 +27,20 @@ func (a ASTPrinter) VisitVarDecl(stmt StmtVarDecl) error {
 	return PrinterResult(fmt.Sprintf("[va] var %s = %v;", stmt.Name.Lexeme, expr))
 }
 
+func (a ASTPrinter) VisitFuncDecl(stmt StmtFuncDecl) error {
+	body := stmt.Body.Accept(a)
+	return PrinterResult(fmt.Sprintf("[fn] fun %s() %s", stmt.Name.Lexeme, body))
+}
+
+func (a ASTPrinter) VisitBlock(stmt StmtBlock) error {
+	str := fmt.Sprintf("{\n")
+	for _, s := range stmt.Statements {
+		str = fmt.Sprintf("%s%v\n", str, s.Accept(a))
+	}
+
+	return PrinterResult(fmt.Sprintf("%s}", str))
+}
+
 func (a ASTPrinter) VisitLiteral(literal ExprLiteral) (any, error) {
 	return toString(literal.Value), nil
 }

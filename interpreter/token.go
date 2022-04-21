@@ -13,6 +13,8 @@ const (
 
 	OPEN_PAREN  TokenType = "OPEN_PAREN"
 	CLOSE_PAREN TokenType = "CLOSE_PAREN"
+	OPEN_BRACE  TokenType = "OPEN_BRACE"
+	CLOSE_BRACE TokenType = "CLOSE_BRACE"
 
 	EQUAL         TokenType = "EQUAL"
 	EQUAL_EQUAL   TokenType = "EQUAL_EQUAL"
@@ -36,6 +38,7 @@ const (
 	TRUE  TokenType = "TRUE"
 	FALSE TokenType = "FALSE"
 	VAR   TokenType = "VAR"
+	FUNC  TokenType = "FUNC"
 
 	EOF TokenType = "EOF"
 )

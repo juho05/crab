@@ -50,6 +50,10 @@ func (s *scanner) scan() error {
 			s.addToken(OPEN_PAREN, nil)
 		case ')':
 			s.addToken(CLOSE_PAREN, nil)
+		case '{':
+			s.addToken(OPEN_BRACE, nil)
+		case '}':
+			s.addToken(CLOSE_BRACE, nil)
 
 		case '=':
 			if s.match('=') {
@@ -184,6 +188,8 @@ func (s *scanner) identifier() {
 		s.addToken(FALSE, false)
 	case "var":
 		s.addToken(VAR, nil)
+	case "func":
+		s.addToken(FUNC, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}
