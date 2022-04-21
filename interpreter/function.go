@@ -5,10 +5,17 @@ type Callable interface {
 }
 
 type function struct {
-	name Token
-	body Stmt
+	name    Token
+	body    Stmt
+	closure *Environment
 }
 
 func (f function) Call(i *interpreter) error {
-	return f.body.Accept(i)
+	prevEnv := i.env
+
+	i.env = f.closure
+	err := f.body.Accept(i)
+	i.env = prevEnv
+
+	return err
 }

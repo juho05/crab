@@ -62,8 +62,9 @@ func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {
 
 func (i *interpreter) VisitFuncDecl(stmt StmtFuncDecl) error {
 	err := i.env.Define(stmt.Name.Lexeme, function{
-		name: stmt.Name,
-		body: stmt.Body,
+		name:    stmt.Name,
+		body:    stmt.Body,
+		closure: i.env,
 	})
 	if err != nil {
 		if err == ErrAlreadyDefined {
