@@ -84,6 +84,20 @@ func (p *parser) funcDecl() (Stmt, error) {
 		return nil, p.newError("Expect '(' after function name.")
 	}
 
+	parameters := make([]string, 0)
+	for p.peek().Type != CLOSE_PAREN {
+		if !p.match(IDENTIFIER) {
+			return nil, p.newError("Invalid parameter name.")
+		}
+		parameters = append(parameters, p.previous().Lexeme)
+		if p.peek().Type == CLOSE_PAREN {
+			break
+		}
+		if !p.match(COMMA) {
+			return nil, p.newError("Expect ',' between parameters.")
+		}
+	}
+
 	if !p.match(CLOSE_PAREN) {
 		return nil, p.newError("Expect ')' after function parameter list.")
 	}
@@ -98,8 +112,9 @@ func (p *parser) funcDecl() (Stmt, error) {
 	}
 
 	return StmtFuncDecl{
-		Name: name,
-		Body: block,
+		Name:       name,
+		Body:       block,
+		Parameters: parameters,
 	}, nil
 }
 

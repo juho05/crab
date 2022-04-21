@@ -8,7 +8,8 @@ expressionStmt -> expression ';'
 block -> '{' statement* '}'
 
 varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
-funcDecl -> 'func' IDENTIFIER '(' ')' block
+funcDecl -> 'func' IDENTIFIER '(' parameters? ')' block
+parameters -> IDENTIFIER (',' IDENTIFIER)*
 
 expression -> or
 or -> and (('||'|'^^') and)*

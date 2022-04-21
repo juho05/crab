@@ -37,8 +37,9 @@ func (s StmtVarDecl) Accept(visitor StmtVisitor) error {
 }
 
 type StmtFuncDecl struct {
-	Name Token
-	Body Stmt
+	Name       Token
+	Body       Stmt
+	Parameters []string
 }
 
 func (s StmtFuncDecl) Accept(visitor StmtVisitor) error {

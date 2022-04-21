@@ -1,8 +1,7 @@
-func test() {
-	println("Test");
+func sayHello(greeting, name) {
+	println(greeting, name);
 }
 
 func main() {
-	println("Result:", 1 + 5);
-	test();
+	sayHello("Hello", "World");
 }
