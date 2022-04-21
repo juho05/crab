@@ -2,10 +2,11 @@
 
 program -> declaration*
 
-declaration -> varDecl | funcDecl | statement
+declarationOrStatement -> declaration | statement
+declaration -> varDecl | funcDecl
 statement -> block | expressionStmt
 expressionStmt -> expression ';'
-block -> '{' statement* '}'
+block -> '{' declarationOrStatement* '}'
 
 varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
 funcDecl -> 'func' IDENTIFIER '(' parameters? ')' block
