@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"errors"
 	"fmt"
 	"math"
 )
@@ -23,7 +24,19 @@ func Interpret(program []Stmt, lines [][]rune) error {
 		}
 	}
 
-	return nil
+	main, err := interpreter.env.Get("main")
+	if err != nil {
+		if err == ErrUndefined {
+			return errors.New("No main function.")
+		}
+		return err
+	}
+	mainFunc, ok := main.(function)
+	if !ok {
+		return errors.New("No main function.")
+	}
+
+	return mainFunc.Call(interpreter)
 }
 
 func (i *interpreter) VisitVarDecl(stmt StmtVarDecl) error {

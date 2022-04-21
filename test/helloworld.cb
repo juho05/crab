@@ -1,6 +1,3 @@
-func testFunc() {
-	var test = 5;
-	{
-		var test = 3;
-	}
+func main() {
+
 }
