@@ -15,11 +15,23 @@ func (e *Environment) registerNativeFunctions() {
 	e.Define("millis", funcMillis{})
 }
 
-func registerNativeFunctions(m map[string]variableState) {
-	m["print"] = variableStateUsed
-	m["println"] = variableStateUsed
-	m["input"] = variableStateUsed
-	m["millis"] = variableStateUsed
+func registerNativeFunctions(m map[string]variable) {
+	m["print"] = variable{
+		state:    variableStateUsed,
+		nameType: nameTypeFunction,
+	}
+	m["println"] = variable{
+		state:    variableStateUsed,
+		nameType: nameTypeFunction,
+	}
+	m["input"] = variable{
+		state:    variableStateUsed,
+		nameType: nameTypeFunction,
+	}
+	m["millis"] = variable{
+		state:    variableStateUsed,
+		nameType: nameTypeFunction,
+	}
 }
 
 type funcPrint struct{}

@@ -10,16 +10,29 @@ const (
 	variableStateUsed
 )
 
+type nameType string
+
+const (
+	nameTypeVariable nameType = "variable"
+	nameTypeFunction nameType = "function"
+)
+
+type variable struct {
+	state    variableState
+	name     Token
+	nameType nameType
+}
+
 type checker struct {
 	lines  [][]rune
-	scopes []map[string]variableState
+	scopes []map[string]variable
 	scope  int
 }
 
 func Check(program []Stmt, lines [][]rune) error {
 	checker := &checker{
 		lines:  lines,
-		scopes: make([]map[string]variableState, 0),
+		scopes: make([]map[string]variable, 0),
 		scope:  -1,
 	}
 	checker.beginScope()
@@ -29,6 +42,14 @@ func Check(program []Stmt, lines [][]rune) error {
 		err := stmt.Accept(checker)
 		if err != nil {
 			return err
+		}
+	}
+
+	for _, scope := range checker.scopes {
+		for _, v := range scope {
+			if v.state != variableStateUsed {
+				fmt.Println(generateWarningText(fmt.Sprintf("Unused %s.", v.nameType), lines[v.name.Line], v.name.Line, v.name.Column, v.name.Column+len([]byte(v.name.Lexeme))))
+			}
 		}
 	}
 
@@ -45,12 +66,20 @@ func (c *checker) VisitVarDecl(stmt *StmtVarDecl) error {
 		return c.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
 	}
 
-	c.scopes[c.scope][stmt.Name.Lexeme] = variableStateDeclared
+	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
+		name:     stmt.Name,
+		state:    variableStateDeclared,
+		nameType: nameTypeVariable,
+	}
 	_, err := stmt.Expr.Accept(c)
 	if err != nil {
 		return err
 	}
-	c.scopes[c.scope][stmt.Name.Lexeme] = variableStateDefined
+	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
+		name:     stmt.Name,
+		state:    variableStateDefined,
+		nameType: nameTypeVariable,
+	}
 	return nil
 }
 
@@ -59,13 +88,24 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 		return c.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
 	}
 
-	c.scopes[c.scope][stmt.Name.Lexeme] = variableStateDeclared
-	c.scopes[c.scope][stmt.Name.Lexeme] = variableStateDefined
+	state := variableStateDefined
+	if c.scope == 0 && stmt.Name.Lexeme == "main" {
+		state = variableStateUsed
+	}
+
+	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
+		name:     stmt.Name,
+		state:    state,
+		nameType: nameTypeFunction,
+	}
 
 	c.beginScope()
 	defer c.endScope()
 	for _, p := range stmt.Parameters {
-		c.scopes[c.scope][p] = variableStateUsed
+		c.scopes[c.scope][p] = variable{
+			state:    variableStateUsed,
+			nameType: nameTypeVariable,
+		}
 	}
 
 	return stmt.Body.Accept(c)
@@ -113,6 +153,14 @@ func (c *checker) VisitVariable(expr *ExprVariable) (any, error) {
 		return nil, c.newError("Undefined name.", expr.Name)
 	}
 	expr.NestingLevel = scope
+
+	v := c.scopes[scope][expr.Name.Lexeme]
+	c.scopes[scope][expr.Name.Lexeme] = variable{
+		name:     v.name,
+		nameType: v.nameType,
+		state:    variableStateUsed,
+	}
+
 	return nil, nil
 }
 
@@ -166,7 +214,7 @@ func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
 }
 
 func (c *checker) beginScope() {
-	c.scopes = append(c.scopes, make(map[string]variableState))
+	c.scopes = append(c.scopes, make(map[string]variable))
 	c.scope++
 }
 

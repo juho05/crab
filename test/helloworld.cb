@@ -1,5 +1,10 @@
+func hello() {
+
+}
+
 func main() {
 	println("Time:", millis(), "ms");
 	var name = input("What is your name? ");
 	println("Hello,", name + "!");
+	var test1 = "";
 }
