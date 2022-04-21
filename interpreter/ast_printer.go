@@ -110,7 +110,14 @@ func (a ASTPrinter) VisitUnary(unary *ExprUnary) (any, error) {
 func (a ASTPrinter) VisitBinary(binary *ExprBinary) (any, error) {
 	left, _ := binary.Left.Accept(a)
 	right, _ := binary.Right.Accept(a)
-	return fmt.Sprintf("(%v %s %v)", left, binary.Operator.Lexeme, right), nil
+
+	operator := binary.Operator.Lexeme
+
+	if operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%=" {
+		operator = string([]rune(operator)[0])
+	}
+
+	return fmt.Sprintf("(%v %s %v)", left, operator, right), nil
 }
 
 func (a ASTPrinter) VisitLogical(logical *ExprLogical) (any, error) {

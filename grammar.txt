@@ -16,7 +16,7 @@ if -> 'if' '(' expression ')' statement
 while -> 'while' '(' expression ')' statement
 
 expression -> assign
-assign -> IDENTIFIER '=' assign | or
+assign -> IDENTIFIER ('='|'+='|'-='|'*='|'/='|'%=') assign | or
 or -> and (('||'|'^^') and)*
 and -> equality ('&&' equality)*
 equality -> comparison (('=='|'!=') comparison)*

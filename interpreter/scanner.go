@@ -38,13 +38,29 @@ func (s *scanner) scan() error {
 	for c != '\000' {
 		switch c {
 		case '+':
-			s.addToken(PLUS, nil)
+			if s.match('=') {
+				s.addToken(PLUS_EQUAL, nil)
+			} else {
+				s.addToken(PLUS, nil)
+			}
 		case '-':
-			s.addToken(MINUS, nil)
+			if s.match('=') {
+				s.addToken(MINUS_EQUAL, nil)
+			} else {
+				s.addToken(MINUS, nil)
+			}
 		case '*':
-			s.addToken(ASTERISK, nil)
+			if s.match('=') {
+				s.addToken(ASTERISK_EQUAL, nil)
+			} else {
+				s.addToken(ASTERISK, nil)
+			}
 		case '%':
-			s.addToken(PERCENT, nil)
+			if s.match('=') {
+				s.addToken(PERCENT_EQUAL, nil)
+			} else {
+				s.addToken(PERCENT, nil)
+			}
 
 		case '(':
 			s.addToken(OPEN_PAREN, nil)
@@ -107,6 +123,8 @@ func (s *scanner) scan() error {
 				if err != nil {
 					return err
 				}
+			} else if s.match('=') {
+				s.addToken(SLASH_EQUAL, nil)
 			} else {
 				s.addToken(SLASH, nil)
 			}

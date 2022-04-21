@@ -236,12 +236,41 @@ func (p *parser) assign() (Expr, error) {
 		return nil, err
 	}
 
-	if p.match(EQUAL) {
+	if p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
 		if v, ok := expr.(*ExprVariable); ok {
+			operator := p.previous()
 			right, err := p.assign()
 			if err != nil {
 				return nil, err
 			}
+
+			tokenType := EQUAL
+			switch operator.Type {
+			case PLUS_EQUAL:
+				tokenType = PLUS
+			case MINUS_EQUAL:
+				tokenType = MINUS
+			case ASTERISK_EQUAL:
+				tokenType = ASTERISK
+			case SLASH_EQUAL:
+				tokenType = SLASH
+			case PERCENT_EQUAL:
+				tokenType = PERCENT
+			}
+
+			if tokenType != EQUAL {
+				right = &ExprBinary{
+					Operator: Token{
+						Line:   operator.Line,
+						Type:   tokenType,
+						Column: operator.Column,
+						Lexeme: operator.Lexeme,
+					},
+					Left:  v,
+					Right: right,
+				}
+			}
+
 			return &ExprAssign{
 				Name: v.Name,
 				Expr: right,

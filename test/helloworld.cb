@@ -1,7 +1,13 @@
 func main() {
-	var counter = 0;
-	while (counter < 10) {
-		println(counter);
-		counter = counter + 1;
-	}
+	var x = 0;
+	x += 1;
+	println(1, x);
+	x -= 4;
+	println(-3, x);
+	x *= -3;
+	println(9, x);
+	x /= 3;
+	println(3, x);
+	x %= 2;
+	println(1, x);
 }

@@ -5,11 +5,16 @@ import "fmt"
 type TokenType string
 
 const (
-	PLUS     TokenType = "PLUS"
-	MINUS    TokenType = "MINUS"
-	ASTERISK TokenType = "ASTERISK"
-	SLASH    TokenType = "SLASH"
-	PERCENT  TokenType = "PERCENT"
+	PLUS           TokenType = "PLUS"
+	PLUS_EQUAL     TokenType = "PLUS_EQUAL"
+	MINUS          TokenType = "MINUS"
+	MINUS_EQUAL    TokenType = "MINUS_EQUAL"
+	ASTERISK       TokenType = "ASTERISK"
+	ASTERISK_EQUAL TokenType = "ASTERISK_EQUAL"
+	SLASH          TokenType = "SLASH"
+	SLASH_EQUAL    TokenType = "SLASH_EQUAL"
+	PERCENT        TokenType = "PERCENT"
+	PERCENT_EQUAL  TokenType = "PERCENT_EQUAL"
 
 	OPEN_PAREN  TokenType = "OPEN_PAREN"
 	CLOSE_PAREN TokenType = "CLOSE_PAREN"
