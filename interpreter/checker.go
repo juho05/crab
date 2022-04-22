@@ -233,6 +233,7 @@ func (c *checker) beginScope() {
 
 func (c *checker) endScope() {
 	c.scope--
+	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
 func (c *checker) findVariable(name string) int {

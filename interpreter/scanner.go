@@ -216,6 +216,8 @@ func (s *scanner) identifier() {
 		s.addToken(ELSE, nil)
 	case "while":
 		s.addToken(WHILE, nil)
+	case "for":
+		s.addToken(FOR, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

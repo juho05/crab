@@ -48,6 +48,7 @@ const (
 	IF    TokenType = "IF"
 	ELSE  TokenType = "ELSE"
 	WHILE TokenType = "WHILE"
+	FOR   TokenType = "FOR"
 
 	EOF TokenType = "EOF"
 )

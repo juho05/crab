@@ -4,7 +4,7 @@ program -> declaration*
 
 declarationOrStatement -> declaration | statement
 declaration -> varDecl | funcDecl
-statement -> if | while | block | expressionStmt
+statement -> if | while | for | block | expressionStmt
 expressionStmt -> expression ';'
 block -> '{' declarationOrStatement* '}'
 
@@ -14,6 +14,7 @@ parameters -> IDENTIFIER (',' IDENTIFIER)*
 
 if -> 'if' '(' expression ')' statement
 while -> 'while' '(' expression ')' statement
+for -> 'for' '(' (varDecl|expressionStmt|';') expression? ';' expression? ')' statement
 
 expression -> assign
 assign -> IDENTIFIER ('='|'+='|'-='|'*='|'/='|'%=') assign | or

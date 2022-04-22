@@ -131,6 +131,9 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(WHILE) {
 		return p.whileLoop()
 	}
+	if p.match(FOR) {
+		return p.forLoop()
+	}
 	return p.expressionStmt()
 }
 
@@ -190,6 +193,81 @@ func (p *parser) whileLoop() (Stmt, error) {
 	return &StmtWhile{
 		Condition: condition,
 		Body:      body,
+	}, nil
+}
+
+func (p *parser) forLoop() (Stmt, error) {
+	if !p.match(OPEN_PAREN) {
+		return nil, p.newError("Expect '(' after 'while'.")
+	}
+
+	var initializer Stmt
+	var err error
+	if !p.match(SEMICOLON) {
+		if p.match(VAR) {
+			initializer, err = p.varDecl()
+		} else {
+			initializer, err = p.expressionStmt()
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if initializer == nil {
+		initializer = &StmtExpression{
+			Expr: &ExprLiteral{},
+		}
+	}
+
+	var condition Expr
+	if p.peek().Type != SEMICOLON {
+		condition, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if condition == nil {
+		condition = &ExprLiteral{
+			Value: true,
+		}
+	}
+
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Expect ';' after for loop condition.")
+	}
+
+	var increment Expr
+	if p.peek().Type != CLOSE_PAREN {
+		increment, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if increment == nil {
+		increment = &ExprLiteral{}
+	}
+
+	if !p.match(CLOSE_PAREN) {
+		return nil, p.newError("Expect ')' after for loop clauses.")
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	while := &StmtWhile{
+		Condition: condition,
+		Body: &StmtBlock{
+			Statements: []Stmt{body, &StmtExpression{
+				Expr: increment,
+			}},
+		},
+	}
+
+	return &StmtBlock{
+		Statements: []Stmt{initializer, while},
 	}, nil
 }
 
@@ -523,7 +601,7 @@ func (p *parser) synchronize() {
 		case SEMICOLON:
 			p.current++
 			return
-		case VAR, FUNC, IF:
+		case VAR, FUNC, IF, WHILE, FOR:
 			return
 		}
 		p.current++
