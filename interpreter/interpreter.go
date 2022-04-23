@@ -333,6 +333,22 @@ func (i *interpreter) VisitLogical(expr *ExprLogical) (any, error) {
 	return isTruthy(right), nil
 }
 
+func (i *interpreter) VisitTernary(expr *ExprTernary) (any, error) {
+	left, err := expr.Left.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+
+	if expr.Operator1.Type != QUESTION_MARK {
+		return nil, i.newError(fmt.Sprintf("Invalid ternary operator '%s'.", expr.Operator1.Lexeme), expr.Operator1)
+	}
+
+	if isTruthy(left) {
+		return expr.Center.Accept(i)
+	}
+	return expr.Right.Accept(i)
+}
+
 func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
 	value, err := expr.Expr.Accept(i)
 	if err != nil {

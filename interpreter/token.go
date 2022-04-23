@@ -38,8 +38,10 @@ const (
 	STRING     TokenType = "STRING"
 	IDENTIFIER TokenType = "IDENTIFIER"
 
-	SEMICOLON TokenType = "SEMICOLON"
-	COMMA     TokenType = "COMMA"
+	SEMICOLON     TokenType = "SEMICOLON"
+	COMMA         TokenType = "COMMA"
+	QUESTION_MARK TokenType = "QUESTION_MARK"
+	COLON         TokenType = "COLON"
 
 	TRUE     TokenType = "TRUE"
 	FALSE    TokenType = "FALSE"

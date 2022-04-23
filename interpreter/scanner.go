@@ -133,6 +133,10 @@ func (s *scanner) scan() error {
 			s.addToken(SEMICOLON, nil)
 		case ',':
 			s.addToken(COMMA, nil)
+		case '?':
+			s.addToken(QUESTION_MARK, nil)
+		case ':':
+			s.addToken(COLON, nil)
 
 		case '"':
 			s.string()

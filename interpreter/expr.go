@@ -8,6 +8,7 @@ type ExprVisitor interface {
 	VisitUnary(expr *ExprUnary) (any, error)
 	VisitBinary(expr *ExprBinary) (any, error)
 	VisitLogical(expr *ExprLogical) (any, error)
+	VisitTernary(expr *ExprTernary) (any, error)
 	VisitAssign(expr *ExprAssign) (any, error)
 }
 
@@ -77,6 +78,18 @@ type ExprLogical struct {
 
 func (e *ExprLogical) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitLogical(e)
+}
+
+type ExprTernary struct {
+	Left      Expr
+	Operator1 Token
+	Center    Expr
+	Operator2 Token
+	Right     Expr
+}
+
+func (e *ExprTernary) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitTernary(e)
 }
 
 type ExprAssign struct {

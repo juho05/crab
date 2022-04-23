@@ -1,17 +1,4 @@
 func main() {
-	var counter = 3;
-	while (true) {
-		println(counter);
-		if (counter == 0) {
-			break;
-		}
-		counter-=1;
-	}
-
-	for(var i = 0; i < 10; i+=1) {
-		if (i%2==1) {
-			continue;
-		}
-		println(i);
-	}
+	var a = 3;
+	println(a == 1 ? "one" : a == 2 ? "two" : a == 3 ? "three" : "something else");
 }

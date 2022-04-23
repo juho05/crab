@@ -263,6 +263,18 @@ func (c *checker) VisitLogical(expr *ExprLogical) (any, error) {
 	return expr.Right.Accept(c)
 }
 
+func (c *checker) VisitTernary(expr *ExprTernary) (any, error) {
+	_, err := expr.Left.Accept(c)
+	if err != nil {
+		return nil, err
+	}
+	_, err = expr.Center.Accept(c)
+	if err != nil {
+		return nil, err
+	}
+	return expr.Right.Accept(c)
+}
+
 func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
 	scope := c.findVariable(assign.Name.Lexeme)
 	if scope < 0 {

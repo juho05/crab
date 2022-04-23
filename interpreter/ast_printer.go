@@ -143,6 +143,13 @@ func (a ASTPrinter) VisitLogical(logical *ExprLogical) (any, error) {
 	return fmt.Sprintf("(%v %s %v)", left, logical.Operator.Lexeme, right), nil
 }
 
+func (a ASTPrinter) VisitTernary(ternary *ExprTernary) (any, error) {
+	left, _ := ternary.Left.Accept(a)
+	center, _ := ternary.Center.Accept(a)
+	right, _ := ternary.Right.Accept(a)
+	return fmt.Sprintf("(%v %s %v %s %v)", left, ternary.Operator1.Lexeme, center, ternary.Operator2.Lexeme, right), nil
+}
+
 func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
 	right, _ := assign.Expr.Accept(a)
 	return fmt.Sprintf("((%s:%d) = %v)", assign.Name.Lexeme, assign.NestingLevel, right), nil

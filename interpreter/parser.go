@@ -317,7 +317,7 @@ func (p *parser) expression() (Expr, error) {
 }
 
 func (p *parser) assign() (Expr, error) {
-	expr, err := p.or()
+	expr, err := p.conditional()
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func (p *parser) assign() (Expr, error) {
 	if p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
 		if v, ok := expr.(*ExprVariable); ok {
 			operator := p.previous()
-			right, err := p.assign()
+			right, err := p.conditional()
 			if err != nil {
 				return nil, err
 			}
@@ -363,6 +363,38 @@ func (p *parser) assign() (Expr, error) {
 			}, nil
 		}
 		return nil, p.newError("Can only assign to variables.")
+	}
+
+	return expr, nil
+}
+
+func (p *parser) conditional() (Expr, error) {
+	expr, err := p.or()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(QUESTION_MARK) {
+		operator1 := p.previous()
+		center, err := p.conditional()
+		if err != nil {
+			return nil, err
+		}
+		if !p.match(COLON) {
+			return nil, p.newError("Expect ':' after '?'.")
+		}
+		operator2 := p.previous()
+		right, err := p.conditional()
+		if err != nil {
+			return nil, err
+		}
+		expr = &ExprTernary{
+			Left:      expr,
+			Operator1: operator1,
+			Center:    center,
+			Operator2: operator2,
+			Right:     right,
+		}
 	}
 
 	return expr, nil
