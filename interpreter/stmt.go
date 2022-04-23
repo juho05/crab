@@ -7,6 +7,8 @@ type StmtVisitor interface {
 	VisitFuncDecl(stmt *StmtFuncDecl) error
 	VisitIf(stmt *StmtIf) error
 	VisitWhile(stmt *StmtWhile) error
+	VisitFor(stmt *StmtFor) error
+	VisitLoopControl(stmt *StmtLoopControl) error
 }
 
 type Stmt interface {
@@ -65,4 +67,23 @@ type StmtWhile struct {
 
 func (s *StmtWhile) Accept(visitor StmtVisitor) error {
 	return visitor.VisitWhile(s)
+}
+
+type StmtFor struct {
+	Initializer Stmt
+	Condition   Expr
+	Increment   Expr
+	Body        Stmt
+}
+
+func (s *StmtFor) Accept(visitor StmtVisitor) error {
+	return visitor.VisitFor(s)
+}
+
+type StmtLoopControl struct {
+	Keyword Token
+}
+
+func (s *StmtLoopControl) Accept(visitor StmtVisitor) error {
+	return visitor.VisitLoopControl(s)
 }

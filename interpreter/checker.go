@@ -27,6 +27,7 @@ type checker struct {
 	lines  [][]rune
 	scopes []map[string]variable
 	scope  int
+	inLoop bool
 }
 
 func Check(program []Stmt, lines [][]rune) error {
@@ -108,7 +109,11 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 		}
 	}
 
-	return stmt.Body.Accept(c)
+	wasInLoop := c.inLoop
+	c.inLoop = false
+	err := stmt.Body.Accept(c)
+	c.inLoop = wasInLoop
+	return err
 }
 
 func (c *checker) VisitIf(stmt *StmtIf) error {
@@ -137,9 +142,50 @@ func (c *checker) VisitWhile(stmt *StmtWhile) error {
 		return err
 	}
 
+	wasInLoop := c.inLoop
+	c.inLoop = true
 	err = stmt.Body.Accept(c)
+	c.inLoop = wasInLoop
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c *checker) VisitFor(stmt *StmtFor) error {
+	err := stmt.Initializer.Accept(c)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Increment.Accept(c)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Condition.Accept(c)
+	if err != nil {
+		return err
+	}
+
+	wasInLoop := c.inLoop
+	c.inLoop = true
+	err = stmt.Body.Accept(c)
+	c.inLoop = wasInLoop
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *checker) VisitLoopControl(stmt *StmtLoopControl) error {
+	if !c.inLoop {
+		switch stmt.Keyword.Type {
+		case BREAK:
+			return c.newError("'break' statement outside of loop.", stmt.Keyword)
+		case CONTINUE:
+			return c.newError("'continue' statement outside of loop.", stmt.Keyword)
+		}
 	}
 	return nil
 }

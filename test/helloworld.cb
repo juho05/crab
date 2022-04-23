@@ -1,20 +1,17 @@
 func main() {
-	for (var i = 0; i < 10; i+=1) {
-		println(i);
+	var counter = 3;
+	while (true) {
+		println(counter);
+		if (counter == 0) {
+			break;
+		}
+		counter-=1;
 	}
 
-	var i = 0;
-	for(;i<10;i+=1) {
+	for(var i = 0; i < 10; i+=1) {
+		if (i%2==1) {
+			continue;
+		}
 		println(i);
-	}
-
-	i = 0;
-	for (;i<10;) {
-		println(i);
-		i+=1;
-	}
-
-	for (;;) {
-		println("infinity");
 	}
 }

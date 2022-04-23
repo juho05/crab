@@ -11,6 +11,14 @@ type interpreter struct {
 	env   *Environment
 }
 
+type LoopControl struct {
+	Type TokenType
+}
+
+func (l LoopControl) Error() string {
+	return string(l.Type)
+}
+
 func Interpret(program []Stmt, lines [][]rune) error {
 	interpreter := &interpreter{
 		lines: lines,
@@ -102,6 +110,44 @@ func (i *interpreter) VisitWhile(stmt *StmtWhile) error {
 
 	for isTruthy(condition) {
 		err = stmt.Body.Accept(i)
+		loopControl, ok := err.(LoopControl)
+		if ok {
+			if loopControl.Type == BREAK {
+				break
+			}
+		} else if err != nil {
+			return err
+		}
+		condition, err = stmt.Condition.Accept(i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i *interpreter) VisitFor(stmt *StmtFor) error {
+	err := stmt.Initializer.Accept(i)
+	if err != nil {
+		return err
+	}
+
+	condition, err := stmt.Condition.Accept(i)
+	if err != nil {
+		return err
+	}
+
+	for isTruthy(condition) {
+		err = stmt.Body.Accept(i)
+		loopControl, ok := err.(LoopControl)
+		if ok {
+			if loopControl.Type == BREAK {
+				break
+			}
+		} else if err != nil {
+			return err
+		}
+		_, err = stmt.Increment.Accept(i)
 		if err != nil {
 			return err
 		}
@@ -111,6 +157,12 @@ func (i *interpreter) VisitWhile(stmt *StmtWhile) error {
 		}
 	}
 	return nil
+}
+
+func (i *interpreter) VisitLoopControl(stmt *StmtLoopControl) error {
+	return LoopControl{
+		Type: stmt.Keyword.Type,
+	}
 }
 
 func (i *interpreter) VisitBlock(stmt *StmtBlock) error {

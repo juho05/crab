@@ -134,6 +134,9 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(FOR) {
 		return p.forLoop()
 	}
+	if p.match(BREAK, CONTINUE) {
+		return p.loopControl()
+	}
 	return p.expressionStmt()
 }
 
@@ -226,7 +229,6 @@ func (p *parser) forLoop() (Stmt, error) {
 			return nil, err
 		}
 	}
-
 	if condition == nil {
 		condition = &ExprLiteral{
 			Value: true,
@@ -257,17 +259,23 @@ func (p *parser) forLoop() (Stmt, error) {
 		return nil, err
 	}
 
-	while := &StmtWhile{
-		Condition: condition,
-		Body: &StmtBlock{
-			Statements: []Stmt{body, &StmtExpression{
-				Expr: increment,
-			}},
-		},
-	}
-
 	return &StmtBlock{
-		Statements: []Stmt{initializer, while},
+		Statements: []Stmt{&StmtFor{
+			Initializer: initializer,
+			Condition:   condition,
+			Increment:   increment,
+			Body:        body,
+		}},
+	}, nil
+}
+
+func (p *parser) loopControl() (Stmt, error) {
+	keyword := p.previous()
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Missing semicolon.")
+	}
+	return &StmtLoopControl{
+		Keyword: keyword,
 	}, nil
 }
 

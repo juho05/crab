@@ -218,6 +218,10 @@ func (s *scanner) identifier() {
 		s.addToken(WHILE, nil)
 	case "for":
 		s.addToken(FOR, nil)
+	case "break":
+		s.addToken(BREAK, nil)
+	case "continue":
+		s.addToken(CONTINUE, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

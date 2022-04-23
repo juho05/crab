@@ -69,6 +69,23 @@ func (a ASTPrinter) VisitWhile(stmt *StmtWhile) error {
 	return PrinterResult(fmt.Sprintf("[wh] while (%v)\n%s", condition, body))
 }
 
+func (a ASTPrinter) VisitFor(stmt *StmtFor) error {
+	initializer := stmt.Initializer.Accept(a)
+	condition, _ := stmt.Condition.Accept(a)
+	increment, _ := stmt.Increment.Accept(a)
+
+	body := stmt.Body.Accept(a).Error()
+	if !strings.HasPrefix(body, "{") {
+		body = fmt.Sprintf("{\n%v\n}", body)
+	}
+
+	return PrinterResult(fmt.Sprintf("[fo] for (%v;%v;%v)\n%s", initializer, condition, increment, body))
+}
+
+func (a ASTPrinter) VisitLoopControl(stmt *StmtLoopControl) error {
+	return PrinterResult(fmt.Sprintf("[lc] %s;", stmt.Keyword.Lexeme))
+}
+
 func (a ASTPrinter) VisitBlock(stmt *StmtBlock) error {
 	str := fmt.Sprintf("{\n")
 	for _, s := range stmt.Statements {
