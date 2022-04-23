@@ -93,9 +93,10 @@ func (e *ExprTernary) Accept(visitor ExprVisitor) (any, error) {
 }
 
 type ExprAssign struct {
-	Name         Token
-	NestingLevel int
-	Expr         Expr
+	Operator      Token
+	Names         []Token
+	NestingLevels []int
+	Expr          Expr
 }
 
 func (e *ExprAssign) Accept(visitor ExprVisitor) (any, error) {

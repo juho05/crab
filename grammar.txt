@@ -4,21 +4,22 @@ program -> declaration*
 
 declarationOrStatement -> declaration | statement
 declaration -> varDecl | funcDecl
-statement -> if | while | for | loopControl | block | expressionStmt 
+statement -> if | while | for | loopControl | return | block | expressionStmt 
 expressionStmt -> expression ';'
 block -> '{' declarationOrStatement* '}'
 
-varDecl -> 'var' IDENTIFIER ('=' expression)? ';'
-funcDecl -> 'func' IDENTIFIER '(' parameters? ')' block
+varDecl -> 'var' IDENTIFIER (',' IDENTIFIER)? ('=' expression)? ';'
+funcDecl -> 'func' IDENTIFIER '(' parameters? ')' NUMBER block
 parameters -> IDENTIFIER (',' IDENTIFIER)*
 
 if -> 'if' '(' expression ')' statement
 while -> 'while' '(' expression ')' statement
 for -> 'for' '(' (varDecl|expressionStmt|';') expression? ';' expression? ')' statement
 loopControl -> ('break'|'continue') ';'
+return -> 'return' (conditional (',' conditional)*)? ';'
 
 expression -> assign
-assign -> IDENTIFIER ('='|'+='|'-='|'*='|'/='|'%=') assign | conditional
+assign -> IDENTIFIER (',' IDENTIFIER)? ('='|'+='|'-='|'*='|'/='|'%=') assign | conditional
 conditional -> or '?' conditional ':' conditional
 or -> and (('||'|'^^') and)*
 and -> equality ('&&' equality)*
@@ -29,4 +30,4 @@ factor -> unary (('*'|'/'|'%') unary)*
 unary -> '-' unary | postfix
 postfix -> primary ('++'|'--') | primary ('(' arguments? ')')* || primary
 arguments -> primary (',' primary)*
-primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' expression ')'
+primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' conditional ')'

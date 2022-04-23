@@ -9,6 +9,7 @@ type StmtVisitor interface {
 	VisitWhile(stmt *StmtWhile) error
 	VisitFor(stmt *StmtFor) error
 	VisitLoopControl(stmt *StmtLoopControl) error
+	VisitReturn(stmt *StmtReturn) error
 }
 
 type Stmt interface {
@@ -32,8 +33,9 @@ func (s *StmtBlock) Accept(visitor StmtVisitor) error {
 }
 
 type StmtVarDecl struct {
-	Name Token
-	Expr Expr
+	Operator Token
+	Names    []Token
+	Expr     Expr
 }
 
 func (s *StmtVarDecl) Accept(visitor StmtVisitor) error {
@@ -41,9 +43,10 @@ func (s *StmtVarDecl) Accept(visitor StmtVisitor) error {
 }
 
 type StmtFuncDecl struct {
-	Name       Token
-	Body       Stmt
-	Parameters []string
+	Name             Token
+	Body             Stmt
+	Parameters       []string
+	ReturnValueCount int
 }
 
 func (s *StmtFuncDecl) Accept(visitor StmtVisitor) error {
@@ -51,6 +54,7 @@ func (s *StmtFuncDecl) Accept(visitor StmtVisitor) error {
 }
 
 type StmtIf struct {
+	Keyword   Token
 	Condition Expr
 	Body      Stmt
 	ElseBody  Stmt
@@ -61,6 +65,7 @@ func (s *StmtIf) Accept(visitor StmtVisitor) error {
 }
 
 type StmtWhile struct {
+	Keyword   Token
 	Condition Expr
 	Body      Stmt
 }
@@ -70,6 +75,7 @@ func (s *StmtWhile) Accept(visitor StmtVisitor) error {
 }
 
 type StmtFor struct {
+	Keyword     Token
 	Initializer Stmt
 	Condition   Expr
 	Increment   Expr
@@ -86,4 +92,13 @@ type StmtLoopControl struct {
 
 func (s *StmtLoopControl) Accept(visitor StmtVisitor) error {
 	return visitor.VisitLoopControl(s)
+}
+
+type StmtReturn struct {
+	Keyword Token
+	Values  []Expr
+}
+
+func (s *StmtReturn) Accept(visitor StmtVisitor) error {
+	return visitor.VisitReturn(s)
 }

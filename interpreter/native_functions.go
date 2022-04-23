@@ -40,6 +40,10 @@ func (p funcPrint) ArgumentCount() int {
 	return -1
 }
 
+func (p funcPrint) ReturnValueCount() int {
+	return 0
+}
+
 func (f funcPrint) Call(i *interpreter, args []any) (any, error) {
 	fmt.Print(strings.TrimSuffix(strings.TrimSuffix(fmt.Sprintln(args...), "\n"), "\r"))
 	return nil, nil
@@ -51,6 +55,10 @@ func (p funcPrintln) ArgumentCount() int {
 	return -1
 }
 
+func (p funcPrintln) ReturnValueCount() int {
+	return 0
+}
+
 func (f funcPrintln) Call(i *interpreter, args []any) (any, error) {
 	fmt.Println(strings.TrimSuffix(strings.TrimSuffix(fmt.Sprintln(args...), "\n"), "\r"))
 	return nil, nil
@@ -59,6 +67,10 @@ func (f funcPrintln) Call(i *interpreter, args []any) (any, error) {
 type funcInput struct{}
 
 func (p funcInput) ArgumentCount() int {
+	return 1
+}
+
+func (p funcInput) ReturnValueCount() int {
 	return 1
 }
 
@@ -73,6 +85,10 @@ type funcMillis struct{}
 
 func (p funcMillis) ArgumentCount() int {
 	return 0
+}
+
+func (p funcMillis) ReturnValueCount() int {
+	return 1
 }
 
 func (p funcMillis) Call(i *interpreter, args []any) (any, error) {

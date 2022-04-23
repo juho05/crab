@@ -255,6 +255,8 @@ func (s *scanner) identifier() {
 		s.addToken(BREAK, nil)
 	case "continue":
 		s.addToken(CONTINUE, nil)
+	case "return":
+		s.addToken(RETURN, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

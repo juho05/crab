@@ -55,6 +55,7 @@ const (
 	FOR      TokenType = "FOR"
 	BREAK    TokenType = "BREAK"
 	CONTINUE TokenType = "CONTINUE"
+	RETURN   TokenType = "RETURN"
 
 	EOF TokenType = "EOF"
 )

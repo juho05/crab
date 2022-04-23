@@ -55,11 +55,21 @@ func (p *parser) varDecl() (Stmt, error) {
 		return nil, p.newError("Expect identifier after 'var' keyword.")
 	}
 
-	name := p.previous()
+	names := make([]Token, 1)
+	names[0] = p.previous()
+
+	for p.match(COMMA) {
+		if !p.match(IDENTIFIER) {
+			return nil, p.newError("Expect identifier after ','.")
+		}
+		names = append(names, p.previous())
+	}
 
 	var expr Expr
 	var err error
+	var operator Token
 	if p.match(EQUAL) {
+		operator = p.previous()
 		expr, err = p.expression()
 		if err != nil {
 			return nil, err
@@ -71,8 +81,9 @@ func (p *parser) varDecl() (Stmt, error) {
 	}
 
 	return &StmtVarDecl{
-		Name: name,
-		Expr: expr,
+		Operator: operator,
+		Names:    names,
+		Expr:     expr,
 	}, nil
 }
 
@@ -105,6 +116,16 @@ func (p *parser) funcDecl() (Stmt, error) {
 		return nil, p.newError("Expect ')' after function parameter list.")
 	}
 
+	returnValueCount := 0
+	if p.peek().Type == NUMBER {
+		num := p.peek()
+		if num.Lexeme != "0" && num.Lexeme != "1" && num.Lexeme != "2" && num.Lexeme != "3" && num.Lexeme != "4" {
+			return nil, p.newError("Only 0, 1, 2, 3 or 4 return values are allowed.")
+		}
+		returnValueCount = int(num.Literal.(float64))
+		p.current++
+	}
+
 	if !p.match(OPEN_BRACE) {
 		return nil, p.newError("Expect block after function signature.")
 	}
@@ -115,9 +136,10 @@ func (p *parser) funcDecl() (Stmt, error) {
 	}
 
 	return &StmtFuncDecl{
-		Name:       name,
-		Body:       block,
-		Parameters: parameters,
+		Name:             name,
+		Body:             block,
+		Parameters:       parameters,
+		ReturnValueCount: returnValueCount,
 	}, nil
 }
 
@@ -137,10 +159,14 @@ func (p *parser) statement() (Stmt, error) {
 	if p.match(BREAK, CONTINUE) {
 		return p.loopControl()
 	}
+	if p.match(RETURN) {
+		return p.returnStmt()
+	}
 	return p.expressionStmt()
 }
 
 func (p *parser) ifStmt() (Stmt, error) {
+	keyword := p.previous()
 	if !p.match(OPEN_PAREN) {
 		return nil, p.newError("Expect '(' after 'if'.")
 	}
@@ -168,6 +194,7 @@ func (p *parser) ifStmt() (Stmt, error) {
 	}
 
 	return &StmtIf{
+		Keyword:   keyword,
 		Condition: condition,
 		Body:      body,
 		ElseBody:  elseBody,
@@ -175,6 +202,7 @@ func (p *parser) ifStmt() (Stmt, error) {
 }
 
 func (p *parser) whileLoop() (Stmt, error) {
+	keyword := p.previous()
 	if !p.match(OPEN_PAREN) {
 		return nil, p.newError("Expect '(' after 'while'.")
 	}
@@ -194,12 +222,14 @@ func (p *parser) whileLoop() (Stmt, error) {
 	}
 
 	return &StmtWhile{
+		Keyword:   keyword,
 		Condition: condition,
 		Body:      body,
 	}, nil
 }
 
 func (p *parser) forLoop() (Stmt, error) {
+	keyword := p.previous()
 	if !p.match(OPEN_PAREN) {
 		return nil, p.newError("Expect '(' after 'while'.")
 	}
@@ -261,6 +291,7 @@ func (p *parser) forLoop() (Stmt, error) {
 
 	return &StmtBlock{
 		Statements: []Stmt{&StmtFor{
+			Keyword:     keyword,
 			Initializer: initializer,
 			Condition:   condition,
 			Increment:   increment,
@@ -276,6 +307,32 @@ func (p *parser) loopControl() (Stmt, error) {
 	}
 	return &StmtLoopControl{
 		Keyword: keyword,
+	}, nil
+}
+
+func (p *parser) returnStmt() (Stmt, error) {
+	keyword := p.previous()
+
+	values := make([]Expr, 0)
+
+	for p.peek().Type != SEMICOLON {
+		expr, err := p.conditional()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, expr)
+		if !p.match(COMMA) {
+			break
+		}
+	}
+
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Missing semicolon.")
+	}
+
+	return &StmtReturn{
+		Keyword: keyword,
+		Values:  values,
 	}, nil
 }
 
@@ -317,55 +374,80 @@ func (p *parser) expression() (Expr, error) {
 }
 
 func (p *parser) assign() (Expr, error) {
-	expr, err := p.conditional()
+	exprs := make([]Expr, 1)
+	var err error
+	exprs[0], err = p.conditional()
 	if err != nil {
 		return nil, err
 	}
 
-	if p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
-		if v, ok := expr.(*ExprVariable); ok {
-			operator := p.previous()
-			right, err := p.conditional()
-			if err != nil {
-				return nil, err
-			}
-
-			tokenType := EQUAL
-			switch operator.Type {
-			case PLUS_EQUAL:
-				tokenType = PLUS
-			case MINUS_EQUAL:
-				tokenType = MINUS
-			case ASTERISK_EQUAL:
-				tokenType = ASTERISK
-			case SLASH_EQUAL:
-				tokenType = SLASH
-			case PERCENT_EQUAL:
-				tokenType = PERCENT
-			}
-
-			if tokenType != EQUAL {
-				right = &ExprBinary{
-					Operator: Token{
-						Line:   operator.Line,
-						Type:   tokenType,
-						Column: operator.Column,
-						Lexeme: operator.Lexeme,
-					},
-					Left:  v,
-					Right: right,
-				}
-			}
-
-			return &ExprAssign{
-				Name: v.Name,
-				Expr: right,
-			}, nil
+	isAssign := false
+	if p.match(COMMA) {
+		isAssign = true
+		expr, err := p.conditional()
+		if err != nil {
+			return nil, err
 		}
-		return nil, p.newError("Can only assign to variables.")
+		exprs = append(exprs, expr)
+	}
+	if isAssign && !p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
+		return nil, p.newError("Expect assignment operator after identifier list.")
 	}
 
-	return expr, nil
+	if isAssign || p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
+		operator := p.previous()
+		names := make([]Token, 0)
+		for _, expr := range exprs {
+			if v, ok := expr.(*ExprVariable); ok {
+				names = append(names, v.Name)
+			} else {
+				return nil, p.newErrorAt("Can only assign to variables.", operator)
+			}
+		}
+
+		right, err := p.conditional()
+		if err != nil {
+			return nil, err
+		}
+
+		tokenType := EQUAL
+		switch operator.Type {
+		case PLUS_EQUAL:
+			tokenType = PLUS
+		case MINUS_EQUAL:
+			tokenType = MINUS
+		case ASTERISK_EQUAL:
+			tokenType = ASTERISK
+		case SLASH_EQUAL:
+			tokenType = SLASH
+		case PERCENT_EQUAL:
+			tokenType = PERCENT
+		}
+
+		if tokenType != EQUAL {
+			if len(names) > 1 {
+				return nil, p.newErrorAt("Multi value assignment only allowed for '=' operator.", operator)
+			}
+			right = &ExprBinary{
+				Operator: Token{
+					Line:   operator.Line,
+					Type:   tokenType,
+					Column: operator.Column,
+					Lexeme: operator.Lexeme,
+				},
+				Left:  exprs[0],
+				Right: right,
+			}
+		}
+
+		return &ExprAssign{
+			Operator: operator,
+			Names:    names,
+			Expr:     right,
+		}, nil
+	}
+
+	return exprs[0], nil
 }
 
 func (p *parser) conditional() (Expr, error) {
@@ -565,7 +647,7 @@ func (p *parser) postfix() (Expr, error) {
 			tokenType = MINUS
 		}
 		expr = &ExprAssign{
-			Name: v.Name,
+			Names: []Token{v.Name},
 			Expr: &ExprBinary{
 				Operator: Token{
 					Line:   operator.Line,
@@ -584,7 +666,7 @@ func (p *parser) postfix() (Expr, error) {
 			openParen := p.previous()
 			args := make([]Expr, 0)
 			for p.peek().Type != CLOSE_PAREN {
-				arg, err := p.expression()
+				arg, err := p.conditional()
 				if err != nil {
 					return nil, err
 				}

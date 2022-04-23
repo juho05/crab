@@ -52,21 +52,31 @@ func (i *interpreter) VisitExpression(stmt *StmtExpression) error {
 }
 
 func (i *interpreter) VisitVarDecl(stmt *StmtVarDecl) error {
-	var value any
-	var err error
+	values := make([]any, 1)
 	if stmt.Expr != nil {
-		value, err = stmt.Expr.Accept(i)
+		value, err := stmt.Expr.Accept(i)
 		if err != nil {
-			return nil
+			return err
+		}
+		if ret, ok := value.(multiValueReturn); ok {
+			values = ret
+		} else {
+			values[0] = value
 		}
 	}
 
-	err = i.env.Define(stmt.Name.Lexeme, value)
-	if err != nil {
-		if err == ErrAlreadyDefined {
-			return i.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
+	if len(values) != len(stmt.Names) {
+		return i.newError(fmt.Sprintf("Cannot assign %d value/s to %d variable/s.", len(values), len(stmt.Names)), stmt.Operator)
+	}
+
+	for index, name := range stmt.Names {
+		err := i.env.Define(name.Lexeme, values[index])
+		if err != nil {
+			if err == ErrAlreadyDefined {
+				return i.newError(fmt.Sprintf("'%s' is already defined in this scope", name.Lexeme), name)
+			}
+			return i.newError(err.Error(), name)
 		}
-		return i.newError(err.Error(), stmt.Name)
 	}
 
 	return nil
@@ -74,10 +84,11 @@ func (i *interpreter) VisitVarDecl(stmt *StmtVarDecl) error {
 
 func (i *interpreter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	err := i.env.Define(stmt.Name.Lexeme, function{
-		name:       stmt.Name,
-		body:       stmt.Body,
-		closure:    i.env,
-		parameters: stmt.Parameters,
+		name:             stmt.Name,
+		body:             stmt.Body,
+		closure:          i.env,
+		parameters:       stmt.Parameters,
+		returnValueCount: stmt.ReturnValueCount,
 	})
 	if err != nil {
 		if err == ErrAlreadyDefined {
@@ -90,6 +101,11 @@ func (i *interpreter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 
 func (i *interpreter) VisitIf(stmt *StmtIf) error {
 	condition, err := stmt.Condition.Accept(i)
+	if err != nil {
+		return err
+	}
+
+	err = i.errorIfMultiValue(condition, stmt.Keyword)
 	if err != nil {
 		return err
 	}
@@ -108,6 +124,11 @@ func (i *interpreter) VisitWhile(stmt *StmtWhile) error {
 		return err
 	}
 
+	err = i.errorIfMultiValue(condition, stmt.Keyword)
+	if err != nil {
+		return err
+	}
+
 	for isTruthy(condition) {
 		err = stmt.Body.Accept(i)
 		loopControl, ok := err.(LoopControl)
@@ -122,6 +143,10 @@ func (i *interpreter) VisitWhile(stmt *StmtWhile) error {
 		if err != nil {
 			return err
 		}
+		err = i.errorIfMultiValue(condition, stmt.Keyword)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -133,6 +158,10 @@ func (i *interpreter) VisitFor(stmt *StmtFor) error {
 	}
 
 	condition, err := stmt.Condition.Accept(i)
+	if err != nil {
+		return err
+	}
+	err = i.errorIfMultiValue(condition, stmt.Keyword)
 	if err != nil {
 		return err
 	}
@@ -155,6 +184,10 @@ func (i *interpreter) VisitFor(stmt *StmtFor) error {
 		if err != nil {
 			return err
 		}
+		err = i.errorIfMultiValue(condition, stmt.Keyword)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -162,6 +195,24 @@ func (i *interpreter) VisitFor(stmt *StmtFor) error {
 func (i *interpreter) VisitLoopControl(stmt *StmtLoopControl) error {
 	return LoopControl{
 		Type: stmt.Keyword.Type,
+	}
+}
+
+func (i *interpreter) VisitReturn(stmt *StmtReturn) error {
+	values := make([]any, len(stmt.Values))
+	for index, v := range stmt.Values {
+		value, err := v.Accept(i)
+		if err != nil {
+			return err
+		}
+		err = i.errorIfMultiValue(value, stmt.Keyword)
+		if err != nil {
+			return err
+		}
+		values[index] = value
+	}
+	return Return{
+		Values: values,
 	}
 }
 
@@ -192,18 +243,26 @@ func (i *interpreter) VisitCall(call *ExprCall) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = i.errorIfMultiValue(expr, call.OpenParen)
+	if err != nil {
+		return nil, err
+	}
 	callable, ok := expr.(Callable)
 	if !ok {
 		return nil, i.newError("Can only call functions.", call.OpenParen)
 	}
 
 	if callable.ArgumentCount() != -1 && callable.ArgumentCount() != len(call.Args) {
-		return nil, i.newError(fmt.Sprintf("Wrong argument count. Expect %d, got %d.", callable.ArgumentCount(), len(call.Args)), call.OpenParen)
+		return nil, i.newError(fmt.Sprintf("Wrong argument count. Expected %d, got %d.", callable.ArgumentCount(), len(call.Args)), call.OpenParen)
 	}
 
 	args := make([]any, len(call.Args))
 	for index, a := range call.Args {
 		args[index], err = a.Accept(i)
+		if err != nil {
+			return nil, err
+		}
+		err = i.errorIfMultiValue(args[index], call.OpenParen)
 		if err != nil {
 			return nil, err
 		}
@@ -218,6 +277,10 @@ func (i *interpreter) VisitGrouping(expr *ExprGrouping) (any, error) {
 
 func (i *interpreter) VisitUnary(expr *ExprUnary) (any, error) {
 	right, err := expr.Right.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	err = i.errorIfMultiValue(right, expr.Operator)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +303,15 @@ func (i *interpreter) VisitBinary(expr *ExprBinary) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = i.errorIfMultiValue(left, expr.Operator)
+	if err != nil {
+		return nil, err
+	}
 	right, err := expr.Right.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	err = i.errorIfMultiValue(right, expr.Operator)
 	if err != nil {
 		return nil, err
 	}
@@ -310,9 +381,17 @@ func (i *interpreter) VisitLogical(expr *ExprLogical) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = i.errorIfMultiValue(left, expr.Operator)
+	if err != nil {
+		return nil, err
+	}
 
 	if expr.Operator.Type == XOR {
 		right, err := expr.Right.Accept(i)
+		if err != nil {
+			return nil, err
+		}
+		err = i.errorIfMultiValue(right, expr.Operator)
 		if err != nil {
 			return nil, err
 		}
@@ -330,11 +409,20 @@ func (i *interpreter) VisitLogical(expr *ExprLogical) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = i.errorIfMultiValue(right, expr.Operator)
+	if err != nil {
+		return nil, err
+	}
+
 	return isTruthy(right), nil
 }
 
 func (i *interpreter) VisitTernary(expr *ExprTernary) (any, error) {
 	left, err := expr.Left.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	err = i.errorIfMultiValue(left, expr.Operator1)
 	if err != nil {
 		return nil, err
 	}
@@ -350,11 +438,24 @@ func (i *interpreter) VisitTernary(expr *ExprTernary) (any, error) {
 }
 
 func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
+	values := make([]any, 0)
 	value, err := expr.Expr.Accept(i)
 	if err != nil {
 		return nil, err
 	}
-	i.env.Assign(expr.Name.Lexeme, value, expr.NestingLevel)
+	if ret, ok := value.(multiValueReturn); ok {
+		values = ret
+	} else {
+		values = append(values, value)
+	}
+
+	if len(values) != len(expr.Names) {
+		return nil, i.newError(fmt.Sprintf("Cannot assign %d values to %d variables.", len(values), len(expr.Names)), expr.Operator)
+	}
+
+	for index, name := range expr.Names {
+		i.env.Assign(name.Lexeme, values[index], expr.NestingLevels[index])
+	}
 	return value, nil
 }
 
@@ -398,6 +499,13 @@ func (i *interpreter) beginScope() {
 
 func (i *interpreter) endScope() {
 	i.env = i.env.parent
+}
+
+func (i *interpreter) errorIfMultiValue(value any, token Token) error {
+	if _, ok := value.(multiValueReturn); ok {
+		return i.newError("Multiple values where a single value was expected.", token)
+	}
+	return nil
 }
 
 type RuntimeError struct {

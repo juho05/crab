@@ -1,9 +1,8 @@
-func main() {
-	var a = 5;
-	a = a + a--;
-	println(a);
+func test() 2 {
+    return "Hello", "World";
+}
 
-	for (var i = 0; i < 5; i++) {
-		println(i);
-	}
+func main() {
+	var x, y = test();
+	println(x, y);
 }

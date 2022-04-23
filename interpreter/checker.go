@@ -24,10 +24,11 @@ type variable struct {
 }
 
 type checker struct {
-	lines  [][]rune
-	scopes []map[string]variable
-	scope  int
-	inLoop bool
+	lines            [][]rune
+	scopes           []map[string]variable
+	scope            int
+	inLoop           bool
+	returnValueCount int
 }
 
 func Check(program []Stmt, lines [][]rune) error {
@@ -63,24 +64,28 @@ func (c *checker) VisitExpression(stmt *StmtExpression) error {
 }
 
 func (c *checker) VisitVarDecl(stmt *StmtVarDecl) error {
-	if _, ok := c.scopes[c.scope][stmt.Name.Lexeme]; ok {
-		return c.newError(fmt.Sprintf("'%s' is already defined in this scope", stmt.Name.Lexeme), stmt.Name)
-	}
-
-	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
-		name:     stmt.Name,
-		state:    variableStateDeclared,
-		nameType: nameTypeVariable,
+	for _, name := range stmt.Names {
+		if _, ok := c.scopes[c.scope][name.Lexeme]; ok {
+			return c.newError(fmt.Sprintf("'%s' is already defined in this scope", name.Lexeme), name)
+		}
+		c.scopes[c.scope][name.Lexeme] = variable{
+			name:     name,
+			state:    variableStateDeclared,
+			nameType: nameTypeVariable,
+		}
 	}
 	_, err := stmt.Expr.Accept(c)
 	if err != nil {
 		return err
 	}
-	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
-		name:     stmt.Name,
-		state:    variableStateDefined,
-		nameType: nameTypeVariable,
+	for _, name := range stmt.Names {
+		c.scopes[c.scope][name.Lexeme] = variable{
+			name:     name,
+			state:    variableStateDefined,
+			nameType: nameTypeVariable,
+		}
 	}
+
 	return nil
 }
 
@@ -111,8 +116,15 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 
 	wasInLoop := c.inLoop
 	c.inLoop = false
+
+	prevReturnValueCount := c.returnValueCount
+	c.returnValueCount = stmt.ReturnValueCount
+
 	err := stmt.Body.Accept(c)
+
 	c.inLoop = wasInLoop
+	c.returnValueCount = prevReturnValueCount
+
 	return err
 }
 
@@ -185,6 +197,19 @@ func (c *checker) VisitLoopControl(stmt *StmtLoopControl) error {
 			return c.newError("'break' statement outside of loop.", stmt.Keyword)
 		case CONTINUE:
 			return c.newError("'continue' statement outside of loop.", stmt.Keyword)
+		}
+	}
+	return nil
+}
+
+func (c *checker) VisitReturn(stmt *StmtReturn) error {
+	if len(stmt.Values) != c.returnValueCount {
+		return c.newError(fmt.Sprintf("Wrong return value count. Expected %d, got %d.", c.returnValueCount, len(stmt.Values)), stmt.Keyword)
+	}
+	for _, v := range stmt.Values {
+		_, err := v.Accept(c)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -276,11 +301,14 @@ func (c *checker) VisitTernary(expr *ExprTernary) (any, error) {
 }
 
 func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
-	scope := c.findVariable(assign.Name.Lexeme)
-	if scope < 0 {
-		return nil, c.newError("Undefined name.", assign.Name)
+	assign.NestingLevels = make([]int, len(assign.Names))
+	for i, name := range assign.Names {
+		scope := c.findVariable(name.Lexeme)
+		if scope < 0 {
+			return nil, c.newError("Undefined name.", name)
+		}
+		assign.NestingLevels[i] = scope
 	}
-	assign.NestingLevel = scope
 	return assign.Expr.Accept(c)
 }
 

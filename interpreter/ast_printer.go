@@ -30,12 +30,16 @@ func (a ASTPrinter) VisitVarDecl(stmt *StmtVarDecl) error {
 	} else {
 		expr = toString(nil)
 	}
-	return PrinterResult(fmt.Sprintf("[va] var %s = %v;", stmt.Name.Lexeme, expr))
+	names := stmt.Names[0].Lexeme
+	for i := 1; i < len(stmt.Names); i++ {
+		names = fmt.Sprintf("%s, %s", names, stmt.Names[i].Lexeme)
+	}
+	return PrinterResult(fmt.Sprintf("[va] var %s = %v;", names, expr))
 }
 
 func (a ASTPrinter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	body := stmt.Body.Accept(a)
-	return PrinterResult(fmt.Sprintf("[fn] fun %s() %s", stmt.Name.Lexeme, body))
+	return PrinterResult(fmt.Sprintf("[fn] fun %s() %d %s", stmt.Name.Lexeme, stmt.ReturnValueCount, body))
 }
 
 func (a ASTPrinter) VisitIf(stmt *StmtIf) error {
@@ -84,6 +88,20 @@ func (a ASTPrinter) VisitFor(stmt *StmtFor) error {
 
 func (a ASTPrinter) VisitLoopControl(stmt *StmtLoopControl) error {
 	return PrinterResult(fmt.Sprintf("[lc] %s;", stmt.Keyword.Lexeme))
+}
+
+func (a ASTPrinter) VisitReturn(stmt *StmtReturn) error {
+	text := "[re] return"
+
+	for i, v := range stmt.Values {
+		value, _ := v.Accept(a)
+		text = fmt.Sprintf("%s %s", text, value)
+		if i < len(stmt.Values)-1 {
+			text = fmt.Sprintf("%s,", text)
+		}
+	}
+
+	return PrinterResult(text + ";")
 }
 
 func (a ASTPrinter) VisitBlock(stmt *StmtBlock) error {
@@ -152,7 +170,11 @@ func (a ASTPrinter) VisitTernary(ternary *ExprTernary) (any, error) {
 
 func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
 	right, _ := assign.Expr.Accept(a)
-	return fmt.Sprintf("((%s:%d) = %v)", assign.Name.Lexeme, assign.NestingLevel, right), nil
+	names := fmt.Sprintf("(%s:%d)", assign.Names[0].Lexeme, assign.NestingLevels[0])
+	for i := 1; i < len(assign.Names); i++ {
+		names = fmt.Sprintf("%s, (%s:%d)", names, assign.Names[i].Lexeme, assign.NestingLevels[i])
+	}
+	return fmt.Sprintf("(%s = %v)", names, right), nil
 }
 
 func toString(value any) string {
