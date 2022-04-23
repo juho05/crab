@@ -1,4 +1,9 @@
 func main() {
-	var a = "This is a \t string.\n\"New \e[35mLine\e[0m\"\n";
-	print(a);
+	var a = 5;
+	a = a + a--;
+	println(a);
+
+	for (var i = 0; i < 5; i++) {
+		println(i);
+	}
 }

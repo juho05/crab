@@ -7,8 +7,10 @@ type TokenType string
 const (
 	PLUS           TokenType = "PLUS"
 	PLUS_EQUAL     TokenType = "PLUS_EQUAL"
+	PLUS_PLUS      TokenType = "PLUS_PLUS"
 	MINUS          TokenType = "MINUS"
 	MINUS_EQUAL    TokenType = "MINUS_EQUAL"
+	MINUS_MINUS    TokenType = "MINUS_MINUS"
 	ASTERISK       TokenType = "ASTERISK"
 	ASTERISK_EQUAL TokenType = "ASTERISK_EQUAL"
 	SLASH          TokenType = "SLASH"

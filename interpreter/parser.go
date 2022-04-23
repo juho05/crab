@@ -545,38 +545,65 @@ func (p *parser) unary() (Expr, error) {
 		}, nil
 	}
 
-	return p.call()
+	return p.postfix()
 }
 
-func (p *parser) call() (Expr, error) {
+func (p *parser) postfix() (Expr, error) {
 	expr, err := p.primary()
 	if err != nil {
 		return nil, err
 	}
 
-	if p.match(OPEN_PAREN) {
-		openParen := p.previous()
-		args := make([]Expr, 0)
-		for p.peek().Type != CLOSE_PAREN {
-			arg, err := p.expression()
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, arg)
-			if p.peek().Type == CLOSE_PAREN {
-				break
-			}
-			if !p.match(COMMA) {
-				return nil, p.newError("Expect ',' between arguments.")
-			}
+	if p.match(PLUS_PLUS, MINUS_MINUS) {
+		operator := p.previous()
+		v, ok := expr.(*ExprVariable)
+		if !ok {
+			return nil, p.newErrorAt("Can only increment/decrement variables.", operator)
 		}
-		if !p.match(CLOSE_PAREN) {
-			return nil, p.newError("Expect ')' after argument list.")
+		tokenType := PLUS
+		if operator.Type == MINUS_MINUS {
+			tokenType = MINUS
 		}
-		expr = &ExprCall{
-			OpenParen: openParen,
-			Callee:    expr,
-			Args:      args,
+		expr = &ExprAssign{
+			Name: v.Name,
+			Expr: &ExprBinary{
+				Operator: Token{
+					Line:   operator.Line,
+					Type:   tokenType,
+					Lexeme: operator.Lexeme,
+					Column: operator.Column,
+				},
+				Left: v,
+				Right: &ExprLiteral{
+					Value: 1.0,
+				},
+			},
+		}
+	} else if p.peek().Type == OPEN_PAREN {
+		for p.match(OPEN_PAREN) {
+			openParen := p.previous()
+			args := make([]Expr, 0)
+			for p.peek().Type != CLOSE_PAREN {
+				arg, err := p.expression()
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, arg)
+				if p.peek().Type == CLOSE_PAREN {
+					break
+				}
+				if !p.match(COMMA) {
+					return nil, p.newError("Expect ',' between arguments.")
+				}
+			}
+			if !p.match(CLOSE_PAREN) {
+				return nil, p.newError("Expect ')' after argument list.")
+			}
+			expr = &ExprCall{
+				OpenParen: openParen,
+				Callee:    expr,
+				Args:      args,
+			}
 		}
 	}
 

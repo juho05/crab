@@ -40,12 +40,16 @@ func (s *scanner) scan() error {
 		case '+':
 			if s.match('=') {
 				s.addToken(PLUS_EQUAL, nil)
+			} else if s.match('+') {
+				s.addToken(PLUS_PLUS, nil)
 			} else {
 				s.addToken(PLUS, nil)
 			}
 		case '-':
 			if s.match('=') {
 				s.addToken(MINUS_EQUAL, nil)
+			} else if s.match('-') {
+				s.addToken(MINUS_MINUS, nil)
 			} else {
 				s.addToken(MINUS, nil)
 			}

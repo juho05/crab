@@ -130,7 +130,7 @@ func (a ASTPrinter) VisitBinary(binary *ExprBinary) (any, error) {
 
 	operator := binary.Operator.Lexeme
 
-	if operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%=" {
+	if operator == "+=" || operator == "-=" || operator == "*=" || operator == "/=" || operator == "%=" || operator == "++" || operator == "--" {
 		operator = string([]rune(operator)[0])
 	}
 
