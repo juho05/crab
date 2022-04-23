@@ -156,8 +156,14 @@ func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
 }
 
 func toString(value any) string {
-	if _, ok := value.(string); ok {
-		return fmt.Sprintf("\"%v\"", value)
+	if s, ok := value.(string); ok {
+		s = strings.ReplaceAll(s, "\\", "\\\\")
+		s = strings.ReplaceAll(s, "\"", "\\\"")
+		s = strings.ReplaceAll(s, "\r", "\\r")
+		s = strings.ReplaceAll(s, "\n", "\\n")
+		s = strings.ReplaceAll(s, "\t", "\\t")
+		s = strings.ReplaceAll(s, "\x1b", "\\e")
+		return fmt.Sprintf("\"%v\"", s)
 	}
 	if value == nil {
 		return fmt.Sprintf("null")

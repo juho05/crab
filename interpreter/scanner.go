@@ -139,7 +139,10 @@ func (s *scanner) scan() error {
 			s.addToken(COLON, nil)
 
 		case '"':
-			s.string()
+			err := s.string()
+			if err != nil {
+				return err
+			}
 
 		case ' ', '\t':
 			break
@@ -188,13 +191,35 @@ func (s *scanner) number() {
 }
 
 func (s *scanner) string() error {
+	characters := make([]rune, 0)
 	for s.peek() != '"' && s.peek() != '\n' {
-		s.nextCharacter()
+		c, _ := s.nextCharacter()
+		if c == '\\' {
+			c, _ = s.nextCharacter()
+			switch c {
+			case 'r':
+				characters = append(characters, '\r')
+			case 'n':
+				characters = append(characters, '\n')
+			case 't':
+				characters = append(characters, '\t')
+			case 'e':
+				characters = append(characters, '\x1b')
+			case '\\':
+				characters = append(characters, '\\')
+			case '"':
+				characters = append(characters, '"')
+			default:
+				return s.newError("Unknown escape sequence.")
+			}
+		} else {
+			characters = append(characters, c)
+		}
 	}
 	if !s.match('"') {
 		return s.newError("Unterminated string.")
 	}
-	s.addToken(STRING, string(s.lines[s.line][s.tokenStartColumn+1:s.currentColumn]))
+	s.addToken(STRING, string(characters))
 	return nil
 }
 
