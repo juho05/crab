@@ -264,8 +264,26 @@ func (c *checker) VisitCall(expr *ExprCall) (any, error) {
 	return nil, nil
 }
 
+func (c *checker) VisitSubscript(expr *ExprSubscript) (any, error) {
+	_, err := expr.Object.Accept(c)
+	if err != nil {
+		return nil, err
+	}
+	return expr.Subscript.Accept(c)
+}
+
 func (c *checker) VisitGrouping(expr *ExprGrouping) (any, error) {
 	return expr.Expr.Accept(c)
+}
+
+func (c *checker) VisitList(list *ExprList) (any, error) {
+	for _, v := range list.Values {
+		_, err := v.Accept(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nil, nil
 }
 
 func (c *checker) VisitUnary(expr *ExprUnary) (any, error) {
@@ -301,13 +319,11 @@ func (c *checker) VisitTernary(expr *ExprTernary) (any, error) {
 }
 
 func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
-	assign.NestingLevels = make([]int, len(assign.Names))
-	for i, name := range assign.Names {
-		scope := c.findVariable(name.Lexeme)
-		if scope < 0 {
-			return nil, c.newError("Undefined name.", name)
+	for _, assignee := range assign.Assignees {
+		_, err := assignee.Accept(c)
+		if err != nil {
+			return nil, err
 		}
-		assign.NestingLevels[i] = scope
 	}
 	return assign.Expr.Accept(c)
 }

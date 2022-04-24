@@ -18,10 +18,12 @@ const (
 	PERCENT        TokenType = "PERCENT"
 	PERCENT_EQUAL  TokenType = "PERCENT_EQUAL"
 
-	OPEN_PAREN  TokenType = "OPEN_PAREN"
-	CLOSE_PAREN TokenType = "CLOSE_PAREN"
-	OPEN_BRACE  TokenType = "OPEN_BRACE"
-	CLOSE_BRACE TokenType = "CLOSE_BRACE"
+	OPEN_PAREN    TokenType = "OPEN_PAREN"
+	CLOSE_PAREN   TokenType = "CLOSE_PAREN"
+	OPEN_BRACE    TokenType = "OPEN_BRACE"
+	CLOSE_BRACE   TokenType = "CLOSE_BRACE"
+	OPEN_BRACKET  TokenType = "OPEN_BRACKET"
+	CLOSE_BRACKET TokenType = "CLOSE_BRACKET"
 
 	EQUAL         TokenType = "EQUAL"
 	EQUAL_EQUAL   TokenType = "EQUAL_EQUAL"

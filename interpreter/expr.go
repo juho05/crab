@@ -4,7 +4,9 @@ type ExprVisitor interface {
 	VisitLiteral(expr *ExprLiteral) (any, error)
 	VisitVariable(expr *ExprVariable) (any, error)
 	VisitCall(expr *ExprCall) (any, error)
+	VisitSubscript(expr *ExprSubscript) (any, error)
 	VisitGrouping(expr *ExprGrouping) (any, error)
+	VisitList(expr *ExprList) (any, error)
 	VisitUnary(expr *ExprUnary) (any, error)
 	VisitBinary(expr *ExprBinary) (any, error)
 	VisitLogical(expr *ExprLogical) (any, error)
@@ -43,12 +45,31 @@ func (e *ExprCall) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitCall(e)
 }
 
+type ExprSubscript struct {
+	OpenBracket Token
+	Object      Expr
+	Subscript   Expr
+}
+
+func (e *ExprSubscript) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitSubscript(e)
+}
+
 type ExprGrouping struct {
 	Expr Expr
 }
 
 func (e *ExprGrouping) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitGrouping(e)
+}
+
+type ExprList struct {
+	OpenBracket Token
+	Values      []Expr
+}
+
+func (e *ExprList) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitList(e)
 }
 
 type ExprUnary struct {
@@ -93,10 +114,9 @@ func (e *ExprTernary) Accept(visitor ExprVisitor) (any, error) {
 }
 
 type ExprAssign struct {
-	Operator      Token
-	Names         []Token
-	NestingLevels []int
-	Expr          Expr
+	Operator  Token
+	Assignees []Expr
+	Expr      Expr
 }
 
 func (e *ExprAssign) Accept(visitor ExprVisitor) (any, error) {

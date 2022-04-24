@@ -268,11 +268,53 @@ func (i *interpreter) VisitCall(call *ExprCall) (any, error) {
 		}
 	}
 
-	return callable.Call(i, args)
+	value, err := callable.Call(i, args)
+	if typeError, ok := err.(CallError); ok {
+		return value, i.newError(typeError.Error(), call.OpenParen)
+	}
+	return value, err
+}
+
+func (i *interpreter) VisitSubscript(expr *ExprSubscript) (any, error) {
+	object, err := expr.Object.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+	subscript, err := expr.Subscript.Accept(i)
+	if err != nil {
+		return nil, err
+	}
+
+	if l, ok := object.(list); ok {
+		if index, ok := subscript.(float64); ok && index == float64(int(index)) {
+			if int(index) >= len(l) {
+				return nil, i.newError("List index out of bounds.", expr.OpenBracket)
+			}
+			return l[int(index)], nil
+		}
+		return nil, i.newError("Subscript not an integer.", expr.OpenBracket)
+	}
+
+	return nil, i.newError("Can only use subscript operator on lists.", expr.OpenBracket)
 }
 
 func (i *interpreter) VisitGrouping(expr *ExprGrouping) (any, error) {
 	return expr.Expr.Accept(i)
+}
+
+func (i *interpreter) VisitList(expr *ExprList) (any, error) {
+	values := make([]any, len(expr.Values))
+	var err error
+	for index, value := range expr.Values {
+		values[index], err = value.Accept(i)
+		if err != nil {
+			return nil, err
+		}
+		if err := i.errorIfMultiValue(values[index], expr.OpenBracket); err != nil {
+			return nil, err
+		}
+	}
+	return list(values), nil
 }
 
 func (i *interpreter) VisitUnary(expr *ExprUnary) (any, error) {
@@ -346,9 +388,9 @@ func (i *interpreter) VisitBinary(expr *ExprBinary) (any, error) {
 		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
 
 	case EQUAL_EQUAL:
-		return left == right, nil
+		return areEqual(left, right), nil
 	case BANG_EQUAL:
-		return left != right, nil
+		return !areEqual(left, right), nil
 
 	case LESS:
 		if isNumber(left, right) {
@@ -449,12 +491,37 @@ func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
 		values = append(values, value)
 	}
 
-	if len(values) != len(expr.Names) {
-		return nil, i.newError(fmt.Sprintf("Cannot assign %d values to %d variables.", len(values), len(expr.Names)), expr.Operator)
+	if len(values) != len(expr.Assignees) {
+		return nil, i.newError(fmt.Sprintf("Cannot assign %d values to %d variables.", len(values), len(expr.Assignees)), expr.Operator)
 	}
 
-	for index, name := range expr.Names {
-		i.env.Assign(name.Lexeme, values[index], expr.NestingLevels[index])
+	for index, assignee := range expr.Assignees {
+		if v, ok := assignee.(*ExprVariable); ok {
+			i.env.Assign(v.Name.Lexeme, values[index], v.NestingLevel)
+		} else if s, ok := assignee.(*ExprSubscript); ok {
+			object, err := s.Object.Accept(i)
+			if err != nil {
+				return nil, err
+			}
+			subscript, err := s.Subscript.Accept(i)
+			if err != nil {
+				return nil, err
+			}
+
+			if l, ok := object.(list); ok {
+				if sIndex, ok := subscript.(float64); ok && sIndex == float64(int(sIndex)) {
+					if int(sIndex) >= len(l) || sIndex < 0 {
+						return nil, i.newError("List index out of bounds.", s.OpenBracket)
+					}
+					l[int(sIndex)] = values[index]
+					continue
+				}
+				return nil, i.newError("Subscript not an integer.", s.OpenBracket)
+			}
+			return nil, i.newError("Can only use subscript operator on lists.", s.OpenBracket)
+		} else {
+			return nil, i.newError("Can only assign to variables.", expr.Operator)
+		}
 	}
 	return value, nil
 }
@@ -490,7 +557,21 @@ func isTruthy(value any) bool {
 		return len(v) > 0
 	}
 
+	if v, ok := value.(list); ok {
+		return len(v) > 0
+	}
+
 	return false
+}
+
+func areEqual(a, b any) bool {
+	alist, alistOk := a.(list)
+	blist, blistOk := b.(list)
+	if alistOk && blistOk {
+		return alist.equals(blist)
+	}
+
+	return a == b
 }
 
 func (i *interpreter) beginScope() {

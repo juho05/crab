@@ -74,6 +74,10 @@ func (s *scanner) scan() error {
 			s.addToken(OPEN_BRACE, nil)
 		case '}':
 			s.addToken(CLOSE_BRACE, nil)
+		case '[':
+			s.addToken(OPEN_BRACKET, nil)
+		case ']':
+			s.addToken(CLOSE_BRACKET, nil)
 
 		case '=':
 			if s.match('=') {

@@ -1,8 +1,13 @@
-func test() 2 {
-    return "Hello", "World";
-}
-
 func main() {
-	var x, y = test();
-	println(x, y);
+	var list = [];
+	println(len(list), list);
+	list = append(list, 1);
+	list = append(list, 2);
+	list = append(list, [2.1, 2.2]);
+	list = concat(list, [3, 4]);
+	println(len(list), list);
+	list = remove(list, 1);
+	println(len(list), list);
+
+	println(len("Hello World!"), "Hello World!");
 }

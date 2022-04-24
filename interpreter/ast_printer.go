@@ -122,6 +122,16 @@ func (a ASTPrinter) VisitGrouping(grouping *ExprGrouping) (any, error) {
 	return fmt.Sprintf("%v", expr), nil
 }
 
+func (a ASTPrinter) VisitList(list *ExprList) (any, error) {
+	values := ""
+	for _, value := range list.Values {
+		v, _ := value.Accept(a)
+		values = fmt.Sprintf("%s%v,", values, v)
+	}
+	values = strings.Trim(values, ",")
+	return fmt.Sprintf("([%v])", values), nil
+}
+
 func (a ASTPrinter) VisitVariable(variable *ExprVariable) (any, error) {
 	return fmt.Sprintf("(%s:%d)", variable.Name.Lexeme, variable.NestingLevel), nil
 }
@@ -134,7 +144,13 @@ func (a ASTPrinter) VisitCall(call *ExprCall) (any, error) {
 		args = fmt.Sprintf("%s%v,", args, argStr)
 	}
 	args = strings.Trim(args, ",")
-	return fmt.Sprintf("(%s(%v))", callee, args), nil
+	return fmt.Sprintf("(%v(%v))", callee, args), nil
+}
+
+func (a ASTPrinter) VisitSubscript(expr *ExprSubscript) (any, error) {
+	object, _ := expr.Object.Accept(a)
+	subscript, _ := expr.Subscript.Accept(a)
+	return fmt.Sprintf("(%v[%v])", object, subscript), nil
 }
 
 func (a ASTPrinter) VisitUnary(unary *ExprUnary) (any, error) {
@@ -170,11 +186,13 @@ func (a ASTPrinter) VisitTernary(ternary *ExprTernary) (any, error) {
 
 func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
 	right, _ := assign.Expr.Accept(a)
-	names := fmt.Sprintf("(%s:%d)", assign.Names[0].Lexeme, assign.NestingLevels[0])
-	for i := 1; i < len(assign.Names); i++ {
-		names = fmt.Sprintf("%s, (%s:%d)", names, assign.Names[i].Lexeme, assign.NestingLevels[i])
+	assignee, _ := assign.Assignees[0].Accept(a)
+	assignees := fmt.Sprintf("%v", assignee)
+	for i := 1; i < len(assign.Assignees); i++ {
+		assignee, _ := assign.Assignees[i].Accept(a)
+		assignees = fmt.Sprintf("%s, %v", assignees, assignee)
 	}
-	return fmt.Sprintf("(%s = %v)", names, right), nil
+	return fmt.Sprintf("(%s = %v)", assignees, right), nil
 }
 
 func toString(value any) string {

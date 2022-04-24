@@ -28,6 +28,8 @@ comparison -> term (('>'|'>='|'<'|'<=') comparison)*
 term -> factor (('+'|'-') factor)*
 factor -> unary (('*'|'/'|'%') unary)*
 unary -> '-' unary | postfix
-postfix -> primary ('++'|'--') | primary ('(' arguments? ')')* || primary
-arguments -> primary (',' primary)*
-primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' conditional ')'
+postfix -> subscript ('++'|'--') | subscript
+callOrSubscript -> primary (call|subscript)*
+subscript -> '[' expression ']'
+call -> '(' (conditional (',' conditional)*)? ')'
+primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' conditional ')' | '[' (conditional (',' conditional))? ']'

@@ -396,10 +396,12 @@ func (p *parser) assign() (Expr, error) {
 
 	if isAssign || p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
 		operator := p.previous()
-		names := make([]Token, 0)
+		assignees := make([]Expr, 0)
 		for _, expr := range exprs {
 			if v, ok := expr.(*ExprVariable); ok {
-				names = append(names, v.Name)
+				assignees = append(assignees, v)
+			} else if s, ok := expr.(*ExprSubscript); ok {
+				assignees = append(assignees, s)
 			} else {
 				return nil, p.newErrorAt("Can only assign to variables.", operator)
 			}
@@ -425,7 +427,7 @@ func (p *parser) assign() (Expr, error) {
 		}
 
 		if tokenType != EQUAL {
-			if len(names) > 1 {
+			if len(assignees) > 1 {
 				return nil, p.newErrorAt("Multi value assignment only allowed for '=' operator.", operator)
 			}
 			right = &ExprBinary{
@@ -441,9 +443,9 @@ func (p *parser) assign() (Expr, error) {
 		}
 
 		return &ExprAssign{
-			Operator: operator,
-			Names:    names,
-			Expr:     right,
+			Operator:  operator,
+			Assignees: assignees,
+			Expr:      right,
 		}, nil
 	}
 
@@ -631,23 +633,23 @@ func (p *parser) unary() (Expr, error) {
 }
 
 func (p *parser) postfix() (Expr, error) {
-	expr, err := p.primary()
+	expr, err := p.subscriptOrCall()
 	if err != nil {
 		return nil, err
 	}
-
 	if p.match(PLUS_PLUS, MINUS_MINUS) {
 		operator := p.previous()
-		v, ok := expr.(*ExprVariable)
-		if !ok {
-			return nil, p.newErrorAt("Can only increment/decrement variables.", operator)
+		if _, ok := expr.(*ExprVariable); !ok {
+			if _, ok := expr.(*ExprSubscript); !ok {
+				return nil, p.newErrorAt("Can only increment/decrement variables.", operator)
+			}
 		}
 		tokenType := PLUS
 		if operator.Type == MINUS_MINUS {
 			tokenType = MINUS
 		}
 		expr = &ExprAssign{
-			Names: []Token{v.Name},
+			Assignees: []Expr{expr},
 			Expr: &ExprBinary{
 				Operator: Token{
 					Line:   operator.Line,
@@ -655,15 +657,40 @@ func (p *parser) postfix() (Expr, error) {
 					Lexeme: operator.Lexeme,
 					Column: operator.Column,
 				},
-				Left: v,
+				Left: expr,
 				Right: &ExprLiteral{
 					Value: 1.0,
 				},
 			},
 		}
-	} else if p.peek().Type == OPEN_PAREN {
-		for p.match(OPEN_PAREN) {
-			openParen := p.previous()
+	}
+	return expr, nil
+}
+
+func (p *parser) subscriptOrCall() (Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(OPEN_BRACKET, OPEN_PAREN) {
+		token := p.previous()
+
+		if token.Type == OPEN_BRACKET {
+			subscript, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+
+			if !p.match(CLOSE_BRACKET) {
+				return nil, p.newError("Expect ')' after argument list.")
+			}
+
+			expr = &ExprSubscript{
+				OpenBracket: token,
+				Object:      expr,
+				Subscript:   subscript,
+			}
+		} else if token.Type == OPEN_PAREN {
 			args := make([]Expr, 0)
 			for p.peek().Type != CLOSE_PAREN {
 				arg, err := p.conditional()
@@ -682,13 +709,12 @@ func (p *parser) postfix() (Expr, error) {
 				return nil, p.newError("Expect ')' after argument list.")
 			}
 			expr = &ExprCall{
-				OpenParen: openParen,
+				OpenParen: token,
 				Callee:    expr,
 				Args:      args,
 			}
 		}
 	}
-
 	return expr, nil
 }
 
@@ -719,7 +745,38 @@ func (p *parser) primary() (Expr, error) {
 		}, nil
 	}
 
+	if p.match(OPEN_BRACKET) {
+		return p.list()
+	}
+
 	return nil, p.newError(fmt.Sprintf("Unexpected token '%s'", p.peek().Lexeme))
+}
+
+func (p *parser) list() (Expr, error) {
+	openingBracket := p.previous()
+
+	values := make([]Expr, 0)
+
+	for p.peek().Type != CLOSE_BRACKET {
+		expr, err := p.conditional()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, expr)
+
+		if !p.match(COMMA) {
+			break
+		}
+	}
+
+	if !p.match(CLOSE_BRACKET) {
+		return nil, p.newErrorAt("Bracket never closed.", openingBracket)
+	}
+
+	return &ExprList{
+		OpenBracket: openingBracket,
+		Values:      values,
+	}, nil
 }
 
 func (p *parser) match(types ...TokenType) bool {
