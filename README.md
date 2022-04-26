@@ -26,6 +26,23 @@ func main() {
 crab helloworld.cb
 ```
 
+## Features
+
+- dynamic typing
+- helpful error messages
+- scopes and variable shadowing
+- lists
+- control flow statements
+- ternary conditional
+- functions
+- multiple return values
+- functions as values / closures
+- exceptions
+- useful builtin functions
+  - working with lists: len(), append(), concat(), remove()
+  - file operations: fileExists(), writeFileText(), appendFileText(), readFileText(), deleteFile(), listFiles()
+  - other: print(), println(), intput(), millis()
+
 ## License
 
 MIT License
