@@ -1,6 +1,8 @@
 # crab 🦀
 
-A dynamically typed interpreted programming language.
+An interpreted dynamically typed toy programming language.
+
+## [Documentation](https://github.com/Bananenpro/crab/blob/main/DOCUMENTATION.md)
 
 ## Installation
 
