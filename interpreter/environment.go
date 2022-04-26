@@ -26,6 +26,9 @@ func NewEnvironment(parent *Environment) *Environment {
 }
 
 func (e *Environment) Define(name string, value any) error {
+	if name == "" {
+		return nil
+	}
 	if e.Exists(name) {
 		return ErrAlreadyDefined
 	}

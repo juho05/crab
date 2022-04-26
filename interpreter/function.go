@@ -3,6 +3,7 @@ package interpreter
 type Callable interface {
 	ArgumentCount() int
 	ReturnValueCount() int
+	Throws() bool
 	Call(i *interpreter, args []any) (any, error)
 }
 
@@ -20,9 +21,14 @@ type function struct {
 	closure          *Environment
 	parameters       []string
 	returnValueCount int
+	throws           bool
 }
 
 type multiValueReturn []any
+
+func (f function) Throws() bool {
+	return f.throws
+}
 
 func (f function) ArgumentCount() int {
 	return len(f.parameters)

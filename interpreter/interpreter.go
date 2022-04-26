@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 )
 
 type interpreter struct {
@@ -17,6 +18,31 @@ type LoopControl struct {
 
 func (l LoopControl) Error() string {
 	return string(l.Type)
+}
+
+type Exception struct {
+	StackTrace  []int // line numbers most detailed to most general
+	Value       any
+	interpreter *interpreter
+}
+
+func (i *interpreter) NewException(value any, line int) Exception {
+	return Exception{
+		StackTrace:  []int{line},
+		Value:       value,
+		interpreter: i,
+	}
+}
+
+func (e Exception) Error() string {
+	text := fmt.Sprintf("Exception: %v", e.Value)
+
+	for i := len(e.StackTrace) - 1; i >= 0; i-- {
+		if e.StackTrace[i] >= 0 {
+			text = fmt.Sprintf("%s\n[%d] %s", text, e.StackTrace[i], strings.TrimSpace(string(e.interpreter.lines[e.StackTrace[i]])))
+		}
+	}
+	return text
 }
 
 func Interpret(program []Stmt, lines [][]rune) error {
@@ -92,6 +118,7 @@ func (i *interpreter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 		closure:          i.env,
 		parameters:       stmt.Parameters,
 		returnValueCount: stmt.ReturnValueCount,
+		throws:           stmt.Throws,
 	})
 	if err != nil {
 		if err == ErrAlreadyDefined {
@@ -274,6 +301,10 @@ func (i *interpreter) VisitCall(call *ExprCall) (any, error) {
 	value, err := callable.Call(i, args)
 	if typeError, ok := err.(CallError); ok {
 		return value, i.newError(typeError.Error(), call.OpenParen)
+	}
+	if exception, ok := err.(Exception); ok {
+		exception.StackTrace = append(exception.StackTrace, call.OpenParen.Line)
+		return value, exception
 	}
 	return value, err
 }
@@ -527,6 +558,32 @@ func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
 		}
 	}
 	return value, nil
+}
+
+func (i *interpreter) VisitThrow(stmt *StmtThrow) error {
+	value, err := stmt.Value.Accept(i)
+	if err != nil {
+		return err
+	}
+	return i.NewException(value, stmt.Keyword.Line)
+}
+
+func (i *interpreter) VisitTry(stmt *StmtTry) error {
+	err := stmt.Body.Accept(i)
+	exception, ok := err.(Exception)
+	if !ok {
+		return err
+	}
+
+	i.beginScope()
+	defer i.endScope()
+
+	err = i.env.Define(stmt.ExceptionName.Lexeme, exception.Value)
+	if err != nil {
+		return err
+	}
+
+	return stmt.CatchBody.Accept(i)
 }
 
 func isNumber(values ...any) bool {

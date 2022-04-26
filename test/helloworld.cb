@@ -1,32 +1,19 @@
-func main() {
-	println("------- write -------");
-	writeFileText("directory/testfile", "Hello World!\nThis is a test file.");
-	println(readFileText("directory/testfile"));
-	println("------- append -------");
-	writeFileText("directory/testfile", "Hello World!");
-	appendFileText("directory/testfile", "\nThis is a test file.");
-	println(readFileText("directory/testfile"));
+func test() throws {
+	readFileText("testfile");
+}
 
-	writeFileText("directory/file2", "");
+func test2() throws {
+	test();
+}
 
-	println("------- files -------");
-
-	var files = listFiles("directory");
-	for (var i = 0; i < len(files); i++) {
-		println(files[i]);
+func test3() {
+	try {
+		test2();
+	} catch (e) {
+		println("Exception value:", "\"" + e + "\"");
 	}
+}
 
-	println("------- exists? -------");
-	println("directory:", fileExists("directory"));
-	println("directory/file2:", fileExists("directory/file2"));
-	println("directory/file3:", fileExists("directory/file3"));
-
-	println("------- delete -------");
-	deleteFile("directory/file2");
-	println("directory/file2:", fileExists("directory/file2"));
-
-	println("------- delete directory -------");
-	deleteFile("directory/testfile");
-	deleteFile("directory");
-	println("directory:", fileExists("directory"));
+func main() {
+	test3();
 }

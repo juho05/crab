@@ -18,17 +18,26 @@ const (
 )
 
 type variable struct {
-	state    variableState
-	name     Token
-	nameType nameType
+	state        variableState
+	name         Token
+	nameType     nameType
+	functionDecl *StmtFuncDecl
 }
 
 type checker struct {
-	lines            [][]rune
-	scopes           []map[string]variable
-	scope            int
-	inLoop           bool
-	returnValueCount int
+	lines  [][]rune
+	scopes []map[string]variable
+	scope  int
+	state  map[string]any
+}
+
+func (c *checker) copyState() map[string]any {
+	oldState := c.state
+	c.state = make(map[string]any, len(c.state))
+	for k, v := range oldState {
+		c.state[k] = v
+	}
+	return oldState
 }
 
 func Check(program []Stmt, lines [][]rune) error {
@@ -39,10 +48,27 @@ func Check(program []Stmt, lines [][]rune) error {
 	}
 	checker.beginScope()
 
-	for name, _ := range nativeFunctions {
+	checker.state = map[string]any{
+		"inLoop":           false,
+		"returnValueCount": 0,
+		"canThrow":         false,
+		"inTry":            false,
+	}
+
+	for name, callable := range nativeFunctions {
 		checker.scopes[checker.scope][name] = variable{
 			state:    variableStateUsed,
 			nameType: nameTypeFunction,
+			functionDecl: &StmtFuncDecl{
+				Name: Token{
+					Lexeme: name,
+					Line:   -1,
+					Column: -1,
+					Type:   IDENTIFIER,
+				},
+				ReturnValueCount: callable.ArgumentCount(),
+				Throws:           callable.Throws(),
+			},
 		}
 	}
 
@@ -106,9 +132,10 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	}
 
 	c.scopes[c.scope][stmt.Name.Lexeme] = variable{
-		name:     stmt.Name,
-		state:    state,
-		nameType: nameTypeFunction,
+		name:         stmt.Name,
+		state:        state,
+		nameType:     nameTypeFunction,
+		functionDecl: stmt,
 	}
 
 	c.beginScope()
@@ -120,16 +147,14 @@ func (c *checker) VisitFuncDecl(stmt *StmtFuncDecl) error {
 		}
 	}
 
-	wasInLoop := c.inLoop
-	c.inLoop = false
-
-	prevReturnValueCount := c.returnValueCount
-	c.returnValueCount = stmt.ReturnValueCount
+	oldState := c.copyState()
+	c.state["inLoop"] = false
+	c.state["returnValueCount"] = stmt.ReturnValueCount
+	c.state["canThrow"] = stmt.Throws
 
 	err := stmt.Body.Accept(c)
 
-	c.inLoop = wasInLoop
-	c.returnValueCount = prevReturnValueCount
+	c.state = oldState
 
 	return err
 }
@@ -160,10 +185,10 @@ func (c *checker) VisitWhile(stmt *StmtWhile) error {
 		return err
 	}
 
-	wasInLoop := c.inLoop
-	c.inLoop = true
+	oldState := c.copyState()
+	c.state["inLoop"] = true
 	err = stmt.Body.Accept(c)
-	c.inLoop = wasInLoop
+	c.state = oldState
 	if err != nil {
 		return err
 	}
@@ -185,10 +210,10 @@ func (c *checker) VisitFor(stmt *StmtFor) error {
 		return err
 	}
 
-	wasInLoop := c.inLoop
-	c.inLoop = true
+	oldState := c.copyState()
+	c.state["inLoop"] = true
 	err = stmt.Body.Accept(c)
-	c.inLoop = wasInLoop
+	c.state = oldState
 	if err != nil {
 		return err
 	}
@@ -197,7 +222,7 @@ func (c *checker) VisitFor(stmt *StmtFor) error {
 }
 
 func (c *checker) VisitLoopControl(stmt *StmtLoopControl) error {
-	if !c.inLoop {
+	if !c.state["inLoop"].(bool) {
 		switch stmt.Keyword.Type {
 		case BREAK:
 			return c.newError("'break' statement outside of loop.", stmt.Keyword)
@@ -209,8 +234,8 @@ func (c *checker) VisitLoopControl(stmt *StmtLoopControl) error {
 }
 
 func (c *checker) VisitReturn(stmt *StmtReturn) error {
-	if len(stmt.Values) != c.returnValueCount {
-		return c.newError(fmt.Sprintf("Wrong return value count. Expected %d, got %d.", c.returnValueCount, len(stmt.Values)), stmt.Keyword)
+	if len(stmt.Values) != c.state["returnValueCount"].(int) {
+		return c.newError(fmt.Sprintf("Wrong return value count. Expected %d, got %d.", c.state["returnValueCount"].(int), len(stmt.Values)), stmt.Keyword)
 	}
 	for _, v := range stmt.Values {
 		_, err := v.Accept(c)
@@ -218,6 +243,41 @@ func (c *checker) VisitReturn(stmt *StmtReturn) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (c *checker) VisitThrow(stmt *StmtThrow) error {
+	if !c.state["canThrow"].(bool) {
+		return c.newError("Cannot throw exception in non-throwing function. Append 'throws' to the function signature.", stmt.Keyword)
+	}
+	return nil
+}
+
+func (c *checker) VisitTry(stmt *StmtTry) error {
+	oldState := c.copyState()
+	c.state["inTry"] = true
+	err := stmt.Body.Accept(c)
+	c.state = oldState
+	if err != nil {
+		return err
+	}
+
+	c.beginScope()
+	defer c.endScope()
+
+	if stmt.ExceptionName.Lexeme != "" {
+		c.scopes[c.scope][stmt.ExceptionName.Lexeme] = variable{
+			name:     stmt.ExceptionName,
+			state:    variableStateDeclared,
+			nameType: nameTypeVariable,
+		}
+	}
+
+	err = stmt.CatchBody.Accept(c)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -255,6 +315,19 @@ func (c *checker) VisitVariable(expr *ExprVariable) (any, error) {
 }
 
 func (c *checker) VisitCall(expr *ExprCall) (any, error) {
+	var returnValueCount any
+	if v, ok := expr.Callee.(*ExprVariable); ok {
+		scope := c.findVariable(v.Name.Lexeme)
+		variable := c.scopes[scope][v.Name.Lexeme]
+
+		if variable.nameType == nameTypeFunction && variable.functionDecl != nil {
+			if variable.functionDecl.Throws && !c.state["canThrow"].(bool) && !c.state["inTry"].(bool) {
+				return nil, c.newError("Calling throwing function in a non-throwing function outside of a try block.", v.Name)
+			}
+			returnValueCount = variable.functionDecl.ReturnValueCount
+		}
+	}
+
 	_, err := expr.Callee.Accept(c)
 	if err != nil {
 		return nil, err
@@ -267,7 +340,7 @@ func (c *checker) VisitCall(expr *ExprCall) (any, error) {
 		}
 	}
 
-	return nil, nil
+	return returnValueCount, nil
 }
 
 func (c *checker) VisitSubscript(expr *ExprSubscript) (any, error) {
@@ -326,9 +399,14 @@ func (c *checker) VisitTernary(expr *ExprTernary) (any, error) {
 
 func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
 	for _, assignee := range assign.Assignees {
-		_, err := assignee.Accept(c)
+		ret, err := assignee.Accept(c)
 		if err != nil {
 			return nil, err
+		}
+		if returnValueCount, ok := ret.(int); ok {
+			if returnValueCount != len(assign.Assignees) {
+				return nil, c.newError(fmt.Sprintf("Cannot assign %d values to %d variables.", returnValueCount, assign.Assignees), assign.Operator)
+			}
 		}
 	}
 	return assign.Expr.Accept(c)

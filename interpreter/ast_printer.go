@@ -62,6 +62,25 @@ func (a ASTPrinter) VisitIf(stmt *StmtIf) error {
 	return PrinterResult(fmt.Sprintf("[if] if (%v)\n%s%s", condition, body, elseBody))
 }
 
+func (a ASTPrinter) VisitTry(stmt *StmtTry) error {
+	body := stmt.Body.Accept(a).Error()
+	if !strings.HasPrefix(body, "{") {
+		body = fmt.Sprintf("{\n%v\n}", body)
+	}
+
+	catchBody := stmt.CatchBody.Accept(a).Error()
+	if !strings.HasPrefix(catchBody, "{") {
+		catchBody = fmt.Sprintf("{\n%v\n}", catchBody)
+	}
+	if stmt.ExceptionName.Lexeme == "" {
+		catchBody = fmt.Sprintf("\ncatch\n%s", catchBody)
+	} else {
+		catchBody = fmt.Sprintf("\ncatch (%s)\n%s", stmt.ExceptionName.Lexeme, catchBody)
+	}
+
+	return PrinterResult(fmt.Sprintf("[tr] try\n%s%s", body, catchBody))
+}
+
 func (a ASTPrinter) VisitWhile(stmt *StmtWhile) error {
 	condition, _ := stmt.Condition.Accept(a)
 
@@ -102,6 +121,10 @@ func (a ASTPrinter) VisitReturn(stmt *StmtReturn) error {
 	}
 
 	return PrinterResult(text + ";")
+}
+
+func (a ASTPrinter) VisitThrow(stmt *StmtThrow) error {
+	return PrinterResult(fmt.Sprintf("throw %v;", stmt.Value))
 }
 
 func (a ASTPrinter) VisitBlock(stmt *StmtBlock) error {

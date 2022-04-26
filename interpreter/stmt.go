@@ -10,6 +10,8 @@ type StmtVisitor interface {
 	VisitFor(stmt *StmtFor) error
 	VisitLoopControl(stmt *StmtLoopControl) error
 	VisitReturn(stmt *StmtReturn) error
+	VisitThrow(stmt *StmtThrow) error
+	VisitTry(stmt *StmtTry) error
 }
 
 type Stmt interface {
@@ -47,6 +49,7 @@ type StmtFuncDecl struct {
 	Body             Stmt
 	Parameters       []string
 	ReturnValueCount int
+	Throws           bool
 }
 
 func (s *StmtFuncDecl) Accept(visitor StmtVisitor) error {
@@ -101,4 +104,24 @@ type StmtReturn struct {
 
 func (s *StmtReturn) Accept(visitor StmtVisitor) error {
 	return visitor.VisitReturn(s)
+}
+
+type StmtThrow struct {
+	Keyword Token
+	Value   Expr
+}
+
+func (s *StmtThrow) Accept(visitor StmtVisitor) error {
+	return visitor.VisitThrow(s)
+}
+
+type StmtTry struct {
+	Keyword       Token
+	Body          Stmt
+	CatchBody     Stmt
+	ExceptionName Token
+}
+
+func (s *StmtTry) Accept(visitor StmtVisitor) error {
+	return visitor.VisitTry(s)
 }

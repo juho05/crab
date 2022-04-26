@@ -4,12 +4,12 @@ program -> declaration*
 
 declarationOrStatement -> declaration | statement
 declaration -> varDecl | funcDecl
-statement -> if | while | for | loopControl | return | block | expressionStmt 
+statement -> if | while | for | loopControl | return | try | block | expressionStmt 
 expressionStmt -> expression ';'
 block -> '{' declarationOrStatement* '}'
 
 varDecl -> 'var' IDENTIFIER (',' IDENTIFIER)? ('=' expression)? ';'
-funcDecl -> 'func' IDENTIFIER '(' parameters? ')' NUMBER block
+funcDecl -> 'func' IDENTIFIER '(' parameters? ')' NUMBER 'throws'? block
 parameters -> IDENTIFIER (',' IDENTIFIER)*
 
 if -> 'if' '(' expression ')' statement
@@ -17,6 +17,8 @@ while -> 'while' '(' expression ')' statement
 for -> 'for' '(' (varDecl|expressionStmt|';') expression? ';' expression? ')' statement
 loopControl -> ('break'|'continue') ';'
 return -> 'return' (conditional (',' conditional)*)? ';'
+try -> 'try' block 'catch' ('(' IDENTIFIER ')')? block
+throw -> 'throws' expression ';'
 
 expression -> assign
 assign -> IDENTIFIER (',' IDENTIFIER)? ('='|'+='|'-='|'*='|'/='|'%=') assign | conditional

@@ -126,6 +126,11 @@ func (p *parser) funcDecl() (Stmt, error) {
 		p.current++
 	}
 
+	throws := false
+	if p.match(THROWS) {
+		throws = true
+	}
+
 	if !p.match(OPEN_BRACE) {
 		return nil, p.newError("Expect block after function signature.")
 	}
@@ -140,6 +145,7 @@ func (p *parser) funcDecl() (Stmt, error) {
 		Body:             block,
 		Parameters:       parameters,
 		ReturnValueCount: returnValueCount,
+		Throws:           throws,
 	}, nil
 }
 
@@ -161,6 +167,12 @@ func (p *parser) statement() (Stmt, error) {
 	}
 	if p.match(RETURN) {
 		return p.returnStmt()
+	}
+	if p.match(THROW) {
+		return p.throwStmt()
+	}
+	if p.match(TRY) {
+		return p.tryStmt()
 	}
 	return p.expressionStmt()
 }
@@ -333,6 +345,66 @@ func (p *parser) returnStmt() (Stmt, error) {
 	return &StmtReturn{
 		Keyword: keyword,
 		Values:  values,
+	}, nil
+}
+
+func (p *parser) throwStmt() (Stmt, error) {
+	keyword := p.previous()
+
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(SEMICOLON) {
+		return nil, p.newError("Missing semicolon.")
+	}
+
+	return &StmtThrow{
+		Keyword: keyword,
+		Value:   expr,
+	}, nil
+}
+
+func (p *parser) tryStmt() (Stmt, error) {
+	keyword := p.previous()
+	if !p.match(OPEN_BRACE) {
+		return nil, p.newError("Expect '{' after 'try'.")
+	}
+
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(CATCH) {
+		return nil, p.newError("Expect 'catch' after try body.")
+	}
+
+	var exceptionName Token
+	if p.match(OPEN_PAREN) {
+		if !p.match(IDENTIFIER) {
+			return nil, p.newError("Expect exception name.")
+		}
+		exceptionName = p.previous()
+		if !p.match(CLOSE_PAREN) {
+			return nil, p.newError("Expect ')' after exception name.")
+		}
+	}
+
+	if !p.match(OPEN_BRACE) {
+		return nil, p.newError("Expect '{' after 'catch'.")
+	}
+	catchBody, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	return &StmtTry{
+		Keyword:       keyword,
+		Body:          body,
+		CatchBody:     catchBody,
+		ExceptionName: exceptionName,
 	}, nil
 }
 

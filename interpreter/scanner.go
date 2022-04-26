@@ -261,6 +261,14 @@ func (s *scanner) identifier() {
 		s.addToken(CONTINUE, nil)
 	case "return":
 		s.addToken(RETURN, nil)
+	case "try":
+		s.addToken(TRY, nil)
+	case "catch":
+		s.addToken(CATCH, nil)
+	case "throw":
+		s.addToken(THROW, nil)
+	case "throws":
+		s.addToken(THROWS, nil)
 	default:
 		s.addToken(IDENTIFIER, nil)
 	}

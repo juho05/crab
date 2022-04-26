@@ -58,6 +58,10 @@ var nativeFunctions = map[string]Callable{
 
 type funcPrint struct{}
 
+func (p funcPrint) Throws() bool {
+	return false
+}
+
 func (p funcPrint) ArgumentCount() int {
 	return -1
 }
@@ -73,6 +77,10 @@ func (f funcPrint) Call(i *interpreter, args []any) (any, error) {
 
 type funcPrintln struct{}
 
+func (p funcPrintln) Throws() bool {
+	return false
+}
+
 func (p funcPrintln) ArgumentCount() int {
 	return -1
 }
@@ -87,6 +95,10 @@ func (f funcPrintln) Call(i *interpreter, args []any) (any, error) {
 }
 
 type funcInput struct{}
+
+func (p funcInput) Throws() bool {
+	return false
+}
 
 func (p funcInput) ArgumentCount() int {
 	return 1
@@ -105,6 +117,10 @@ func (f funcInput) Call(i *interpreter, args []any) (any, error) {
 
 type funcMillis struct{}
 
+func (p funcMillis) Throws() bool {
+	return false
+}
+
 func (p funcMillis) ArgumentCount() int {
 	return 0
 }
@@ -118,6 +134,10 @@ func (p funcMillis) Call(i *interpreter, args []any) (any, error) {
 }
 
 type funcLen struct{}
+
+func (p funcLen) Throws() bool {
+	return false
+}
 
 func (p funcLen) ArgumentCount() int {
 	return 1
@@ -139,6 +159,10 @@ func (p funcLen) Call(i *interpreter, args []any) (any, error) {
 
 type funcAppend struct{}
 
+func (p funcAppend) Throws() bool {
+	return false
+}
+
 func (p funcAppend) ArgumentCount() int {
 	return 2
 }
@@ -155,6 +179,10 @@ func (p funcAppend) Call(i *interpreter, args []any) (any, error) {
 }
 
 type funcConcat struct{}
+
+func (p funcConcat) Throws() bool {
+	return false
+}
 
 func (p funcConcat) ArgumentCount() int {
 	return 2
@@ -175,6 +203,10 @@ func (p funcConcat) Call(i *interpreter, args []any) (any, error) {
 }
 
 type funcRemove struct{}
+
+func (p funcRemove) Throws() bool {
+	return false
+}
 
 func (p funcRemove) ArgumentCount() int {
 	return 2
@@ -201,6 +233,10 @@ func (p funcRemove) Call(i *interpreter, args []any) (any, error) {
 
 type funcFileExists struct{}
 
+func (p funcFileExists) Throws() bool {
+	return false
+}
+
 func (f funcFileExists) ArgumentCount() int {
 	return 1
 }
@@ -212,17 +248,14 @@ func (f funcFileExists) ReturnValueCount() int {
 func (f funcFileExists) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	_, err := os.Stat(filepath)
-	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
-	if err != nil {
-		// TODO: return exception
-		return nil, err
-	}
-	return true, nil
+	return !errors.Is(err, os.ErrNotExist), nil
 }
 
 type funcReadFileText struct{}
+
+func (p funcReadFileText) Throws() bool {
+	return true
+}
 
 func (f funcReadFileText) ArgumentCount() int {
 	return 1
@@ -236,13 +269,16 @@ func (f funcReadFileText) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	data, err := os.ReadFile(filepath)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	return string(data), nil
 }
 
 type funcWriteFileText struct{}
+
+func (p funcWriteFileText) Throws() bool {
+	return true
+}
 
 func (f funcWriteFileText) ArgumentCount() int {
 	return 2
@@ -256,18 +292,20 @@ func (f funcWriteFileText) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	err := os.MkdirAll(path.Dir(filepath), 0755)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	err = os.WriteFile(filepath, []byte(fmt.Sprint(args[1])), 0755)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	return nil, nil
 }
 
 type funcAppendFileText struct{}
+
+func (p funcAppendFileText) Throws() bool {
+	return true
+}
 
 func (f funcAppendFileText) ArgumentCount() int {
 	return 2
@@ -281,19 +319,21 @@ func (f funcAppendFileText) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, 0755)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	defer file.Close()
 	_, err = file.WriteString(fmt.Sprint(args[1]))
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	return nil, nil
 }
 
 type funcDeleteFile struct{}
+
+func (p funcDeleteFile) Throws() bool {
+	return true
+}
 
 func (f funcDeleteFile) ArgumentCount() int {
 	return 1
@@ -307,13 +347,16 @@ func (f funcDeleteFile) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	err := os.Remove(filepath)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	return nil, nil
 }
 
 type funcListFiles struct{}
+
+func (p funcListFiles) Throws() bool {
+	return true
+}
 
 func (f funcListFiles) ArgumentCount() int {
 	return 1
@@ -327,8 +370,7 @@ func (f funcListFiles) Call(i *interpreter, args []any) (any, error) {
 	filepath := fmt.Sprint(args[0])
 	entries, err := os.ReadDir(filepath)
 	if err != nil {
-		// TODO: return exception
-		return nil, err
+		return nil, i.NewException(err.Error(), -1)
 	}
 	files := make(list, len(entries))
 	for i, entry := range entries {

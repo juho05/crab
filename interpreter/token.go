@@ -58,6 +58,10 @@ const (
 	BREAK    TokenType = "BREAK"
 	CONTINUE TokenType = "CONTINUE"
 	RETURN   TokenType = "RETURN"
+	TRY      TokenType = "TRY"
+	CATCH    TokenType = "CATCH"
+	THROW    TokenType = "THROW"
+	THROWS   TokenType = "THROWS"
 
 	EOF TokenType = "EOF"
 )
