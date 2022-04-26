@@ -2,8 +2,10 @@ package interpreter
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -37,50 +39,21 @@ func newTypeError(value any, expectedType string) CallError {
 	}
 }
 
-func (e *Environment) registerNativeFunctions() {
-	e.Define("print", funcPrint{})
-	e.Define("println", funcPrintln{})
-	e.Define("input", funcInput{})
-	e.Define("millis", funcMillis{})
-	e.Define("len", funcLen{})
-	e.Define("append", funcAppend{})
-	e.Define("concat", funcConcat{})
-	e.Define("remove", funcRemove{})
-}
-
-func registerNativeFunctions(m map[string]variable) {
-	m["print"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["println"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["input"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["millis"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["len"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["append"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["concat"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
-	m["remove"] = variable{
-		state:    variableStateUsed,
-		nameType: nameTypeFunction,
-	}
+var nativeFunctions = map[string]Callable{
+	"print":          funcPrint{},
+	"println":        funcPrintln{},
+	"input":          funcInput{},
+	"millis":         funcMillis{},
+	"len":            funcLen{},
+	"append":         funcAppend{},
+	"concat":         funcConcat{},
+	"remove":         funcRemove{},
+	"fileExists":     funcFileExists{},
+	"readFileText":   funcReadFileText{},
+	"writeFileText":  funcWriteFileText{},
+	"appendFileText": funcAppendFileText{},
+	"deleteFile":     funcDeleteFile{},
+	"listFiles":      funcListFiles{},
 }
 
 type funcPrint struct{}
@@ -156,10 +129,10 @@ func (p funcLen) ReturnValueCount() int {
 
 func (p funcLen) Call(i *interpreter, args []any) (any, error) {
 	if l, ok := args[0].(list); ok {
-		return len(l), nil
+		return float64(len(l)), nil
 	}
 	if s, ok := args[0].(string); ok {
-		return len(s), nil
+		return float64(len(s)), nil
 	}
 	return nil, newTypeError(args[0], "List|String")
 }
@@ -224,4 +197,142 @@ func (p funcRemove) Call(i *interpreter, args []any) (any, error) {
 		return nil, newTypeError(args[1], "Integer")
 	}
 	return nil, newTypeError(args[0], "List")
+}
+
+type funcFileExists struct{}
+
+func (f funcFileExists) ArgumentCount() int {
+	return 1
+}
+
+func (f funcFileExists) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcFileExists) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	_, err := os.Stat(filepath)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	return true, nil
+}
+
+type funcReadFileText struct{}
+
+func (f funcReadFileText) ArgumentCount() int {
+	return 1
+}
+
+func (f funcReadFileText) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcReadFileText) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	data, err := os.ReadFile(filepath)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	return string(data), nil
+}
+
+type funcWriteFileText struct{}
+
+func (f funcWriteFileText) ArgumentCount() int {
+	return 2
+}
+
+func (f funcWriteFileText) ReturnValueCount() int {
+	return 0
+}
+
+func (f funcWriteFileText) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	err := os.MkdirAll(path.Dir(filepath), 0755)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	err = os.WriteFile(filepath, []byte(fmt.Sprint(args[1])), 0755)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	return nil, nil
+}
+
+type funcAppendFileText struct{}
+
+func (f funcAppendFileText) ArgumentCount() int {
+	return 2
+}
+
+func (f funcAppendFileText) ReturnValueCount() int {
+	return 0
+}
+
+func (f funcAppendFileText) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, 0755)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	defer file.Close()
+	_, err = file.WriteString(fmt.Sprint(args[1]))
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	return nil, nil
+}
+
+type funcDeleteFile struct{}
+
+func (f funcDeleteFile) ArgumentCount() int {
+	return 1
+}
+
+func (f funcDeleteFile) ReturnValueCount() int {
+	return 0
+}
+
+func (f funcDeleteFile) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	err := os.Remove(filepath)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	return nil, nil
+}
+
+type funcListFiles struct{}
+
+func (f funcListFiles) ArgumentCount() int {
+	return 1
+}
+
+func (f funcListFiles) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcListFiles) Call(i *interpreter, args []any) (any, error) {
+	filepath := fmt.Sprint(args[0])
+	entries, err := os.ReadDir(filepath)
+	if err != nil {
+		// TODO: return exception
+		return nil, err
+	}
+	files := make(list, len(entries))
+	for i, entry := range entries {
+		files[i] = entry.Name()
+	}
+	return files, nil
 }

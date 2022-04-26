@@ -24,7 +24,10 @@ func Interpret(program []Stmt, lines [][]rune) error {
 		lines: lines,
 		env:   NewEnvironment(nil),
 	}
-	interpreter.env.registerNativeFunctions()
+
+	for name, callable := range nativeFunctions {
+		interpreter.env.Define(name, callable)
+	}
 
 	for _, stmt := range program {
 		err := stmt.Accept(interpreter)

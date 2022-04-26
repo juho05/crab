@@ -38,7 +38,13 @@ func Check(program []Stmt, lines [][]rune) error {
 		scope:  -1,
 	}
 	checker.beginScope()
-	registerNativeFunctions(checker.scopes[checker.scope])
+
+	for name, _ := range nativeFunctions {
+		checker.scopes[checker.scope][name] = variable{
+			state:    variableStateUsed,
+			nameType: nameTypeFunction,
+		}
+	}
 
 	for _, stmt := range program {
 		err := stmt.Accept(checker)
