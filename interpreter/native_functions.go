@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -44,6 +45,9 @@ var nativeFunctions = map[string]Callable{
 	"println":        funcPrintln{},
 	"input":          funcInput{},
 	"millis":         funcMillis{},
+	"toString":       funcToString{},
+	"toNumber":       funcToNumber{},
+	"toBoolean":      funcToBoolean{},
 	"len":            funcLen{},
 	"append":         funcAppend{},
 	"concat":         funcConcat{},
@@ -131,6 +135,68 @@ func (p funcMillis) ReturnValueCount() int {
 
 func (p funcMillis) Call(i *interpreter, args []any) (any, error) {
 	return time.Now().UnixMilli(), nil
+}
+
+type funcToString struct{}
+
+func (p funcToString) Throws() bool {
+	return false
+}
+
+func (p funcToString) ArgumentCount() int {
+	return 1
+}
+
+func (p funcToString) ReturnValueCount() int {
+	return 1
+}
+
+func (p funcToString) Call(i *interpreter, args []any) (any, error) {
+	return fmt.Sprint(args[0]), nil
+}
+
+type funcToNumber struct{}
+
+func (p funcToNumber) Throws() bool {
+	return true
+}
+
+func (p funcToNumber) ArgumentCount() int {
+	return 1
+}
+
+func (p funcToNumber) ReturnValueCount() int {
+	return 1
+}
+
+func (p funcToNumber) Call(i *interpreter, args []any) (any, error) {
+	number, err := strconv.ParseFloat(fmt.Sprint(args[0]), 64)
+	if err != nil {
+		return nil, i.NewException(fmt.Sprintf("Cannot convert '%v' to a number.", args[0]), -1)
+	}
+	return number, nil
+}
+
+type funcToBoolean struct{}
+
+func (p funcToBoolean) Throws() bool {
+	return true
+}
+
+func (p funcToBoolean) ArgumentCount() int {
+	return 1
+}
+
+func (p funcToBoolean) ReturnValueCount() int {
+	return 1
+}
+
+func (p funcToBoolean) Call(i *interpreter, args []any) (any, error) {
+	boolean, err := strconv.ParseBool(fmt.Sprint(args[0]))
+	if err != nil {
+		return nil, i.NewException(fmt.Sprintf("Cannot convert '%v' to a boolean.", args[0]), -1)
+	}
+	return boolean, nil
 }
 
 type funcLen struct{}

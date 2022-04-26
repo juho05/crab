@@ -90,6 +90,59 @@ func main() {
 }
 ```
 
+## Type conversion
+
+Sometimes you need to convert between types, for example when you want to receive numbers from the user.
+There are 3 functions for exactly this purpose: `toString()`, `toNumber()` and `toBoolean()`.
+
+### toString()
+
+`toString()` takes a value and converts it to a string. This action will always succeed.
+
+Example:
+```go
+func main() {
+	var x = 5;
+	x = toString(x); // x is now a string
+}
+```
+
+### toNumber()
+
+`toNumber()` takes a string value and tries to convert it to a number. If this action doesn't succeed, `toNumber()` will throw an exception.
+
+`toNumber()` accepts string representations of integers and floating point numbers.
+
+Example:
+```go
+func main() {
+	var x = "5";
+	try {
+		x = toNumber(x); // x is now a number
+	} catch {
+		// couldn't convert x to a number
+	}
+}
+```
+
+### toBoolean()
+
+`toBoolean()` takes a string value and tries to convert it to a boolean. If this action doesn't succeed, `toBoolean()` will throw an exception.
+
+`toBoolean()` accepts "1", "t", "T", "TRUE", "true", "True", "0", "f", "F", "FALSE", "false" and "False".
+
+Example:
+```go
+func main() {
+	var x = "true";
+	try {
+		x = toBoolean(x); // x is now a boolean
+	} catch {
+		// couldn't convert x to a boolean
+	}
+}
+```
+
 ## Control flow
 
 _crab_ supports the 3 most common control flow constructs:
