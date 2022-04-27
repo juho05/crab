@@ -44,6 +44,10 @@ crab helloworld.cb
 - exceptions
 - useful builtin functions
 
+## Editor support
+
+- [vim-crab](https://github.com/Bananenpro/vim-crab): syntax and indent files for _crab_ in vim
+
 ## License
 
 MIT License
