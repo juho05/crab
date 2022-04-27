@@ -319,17 +319,24 @@ func (i *interpreter) VisitSubscript(expr *ExprSubscript) (any, error) {
 		return nil, err
 	}
 
-	if l, ok := object.(list); ok {
-		if index, ok := subscript.(float64); ok && index == float64(int(index)) {
-			if int(index) >= len(l) {
+	if index, ok := subscript.(float64); ok && index == float64(int(index)) {
+		if l, ok := object.(list); ok {
+			if int(index) >= len(l) || index < 0 {
 				return nil, i.newError("List index out of bounds.", expr.OpenBracket)
 			}
 			return l[int(index)], nil
 		}
-		return nil, i.newError("Subscript not an integer.", expr.OpenBracket)
+		if s, ok := object.(string); ok {
+			str := []rune(s)
+			if int(index) >= len(str) || index < 0 {
+				return nil, i.newError("String index out of bounds.", expr.OpenBracket)
+			}
+			return string(str[int(index)]), nil
+		}
+		return nil, i.newError("Can only use subscript operator on strings and lists.", expr.OpenBracket)
 	}
 
-	return nil, i.newError("Can only use subscript operator on lists.", expr.OpenBracket)
+	return nil, i.newError("Subscript not an integer.", expr.OpenBracket)
 }
 
 func (i *interpreter) VisitGrouping(expr *ExprGrouping) (any, error) {
@@ -542,17 +549,17 @@ func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
 				return nil, err
 			}
 
-			if l, ok := object.(list); ok {
-				if sIndex, ok := subscript.(float64); ok && sIndex == float64(int(sIndex)) {
+			if sIndex, ok := subscript.(float64); ok && sIndex == float64(int(sIndex)) {
+				if l, ok := object.(list); ok {
 					if int(sIndex) >= len(l) || sIndex < 0 {
 						return nil, i.newError("List index out of bounds.", s.OpenBracket)
 					}
 					l[int(sIndex)] = values[index]
 					continue
 				}
-				return nil, i.newError("Subscript not an integer.", s.OpenBracket)
+				return nil, i.newError("Can only use subscript operator on lists.", s.OpenBracket)
 			}
-			return nil, i.newError("Can only use subscript operator on lists.", s.OpenBracket)
+			return nil, i.newError("Subscript not an integer.", s.OpenBracket)
 		} else {
 			return nil, i.newError("Can only assign to variables.", expr.Operator)
 		}

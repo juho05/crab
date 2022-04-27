@@ -58,19 +58,27 @@ var nativeFunctions = map[string]Callable{
 	"appendFileText": funcAppendFileText{},
 	"deleteFile":     funcDeleteFile{},
 	"listFiles":      funcListFiles{},
+	"toLower":        funcToLower{},
+	"toUpper":        funcToUpper{},
+	"contains":       funcContains{},
+	"indexOf":        funcIndexOf{},
+	"trim":           funcTrim{},
+	"replace":        funcReplace{},
+	"split":          funcSplit{},
+	"join":           funcJoin{},
 }
 
 type funcPrint struct{}
 
-func (p funcPrint) Throws() bool {
+func (f funcPrint) Throws() bool {
 	return false
 }
 
-func (p funcPrint) ArgumentCount() int {
+func (f funcPrint) ArgumentCount() int {
 	return -1
 }
 
-func (p funcPrint) ReturnValueCount() int {
+func (f funcPrint) ReturnValueCount() int {
 	return 0
 }
 
@@ -81,15 +89,15 @@ func (f funcPrint) Call(i *interpreter, args []any) (any, error) {
 
 type funcPrintln struct{}
 
-func (p funcPrintln) Throws() bool {
+func (f funcPrintln) Throws() bool {
 	return false
 }
 
-func (p funcPrintln) ArgumentCount() int {
+func (f funcPrintln) ArgumentCount() int {
 	return -1
 }
 
-func (p funcPrintln) ReturnValueCount() int {
+func (f funcPrintln) ReturnValueCount() int {
 	return 0
 }
 
@@ -100,15 +108,15 @@ func (f funcPrintln) Call(i *interpreter, args []any) (any, error) {
 
 type funcInput struct{}
 
-func (p funcInput) Throws() bool {
+func (f funcInput) Throws() bool {
 	return false
 }
 
-func (p funcInput) ArgumentCount() int {
+func (f funcInput) ArgumentCount() int {
 	return 1
 }
 
-func (p funcInput) ReturnValueCount() int {
+func (f funcInput) ReturnValueCount() int {
 	return 1
 }
 
@@ -121,55 +129,55 @@ func (f funcInput) Call(i *interpreter, args []any) (any, error) {
 
 type funcMillis struct{}
 
-func (p funcMillis) Throws() bool {
+func (f funcMillis) Throws() bool {
 	return false
 }
 
-func (p funcMillis) ArgumentCount() int {
+func (f funcMillis) ArgumentCount() int {
 	return 0
 }
 
-func (p funcMillis) ReturnValueCount() int {
+func (f funcMillis) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcMillis) Call(i *interpreter, args []any) (any, error) {
+func (f funcMillis) Call(i *interpreter, args []any) (any, error) {
 	return time.Now().UnixMilli(), nil
 }
 
 type funcToString struct{}
 
-func (p funcToString) Throws() bool {
+func (f funcToString) Throws() bool {
 	return false
 }
 
-func (p funcToString) ArgumentCount() int {
+func (f funcToString) ArgumentCount() int {
 	return 1
 }
 
-func (p funcToString) ReturnValueCount() int {
+func (f funcToString) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcToString) Call(i *interpreter, args []any) (any, error) {
+func (f funcToString) Call(i *interpreter, args []any) (any, error) {
 	return fmt.Sprint(args[0]), nil
 }
 
 type funcToNumber struct{}
 
-func (p funcToNumber) Throws() bool {
+func (f funcToNumber) Throws() bool {
 	return true
 }
 
-func (p funcToNumber) ArgumentCount() int {
+func (f funcToNumber) ArgumentCount() int {
 	return 1
 }
 
-func (p funcToNumber) ReturnValueCount() int {
+func (f funcToNumber) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcToNumber) Call(i *interpreter, args []any) (any, error) {
+func (f funcToNumber) Call(i *interpreter, args []any) (any, error) {
 	number, err := strconv.ParseFloat(fmt.Sprint(args[0]), 64)
 	if err != nil {
 		return nil, i.NewException(fmt.Sprintf("Cannot convert '%v' to a number.", args[0]), -1)
@@ -179,19 +187,19 @@ func (p funcToNumber) Call(i *interpreter, args []any) (any, error) {
 
 type funcToBoolean struct{}
 
-func (p funcToBoolean) Throws() bool {
+func (f funcToBoolean) Throws() bool {
 	return true
 }
 
-func (p funcToBoolean) ArgumentCount() int {
+func (f funcToBoolean) ArgumentCount() int {
 	return 1
 }
 
-func (p funcToBoolean) ReturnValueCount() int {
+func (f funcToBoolean) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcToBoolean) Call(i *interpreter, args []any) (any, error) {
+func (f funcToBoolean) Call(i *interpreter, args []any) (any, error) {
 	boolean, err := strconv.ParseBool(fmt.Sprint(args[0]))
 	if err != nil {
 		return nil, i.NewException(fmt.Sprintf("Cannot convert '%v' to a boolean.", args[0]), -1)
@@ -201,19 +209,19 @@ func (p funcToBoolean) Call(i *interpreter, args []any) (any, error) {
 
 type funcLen struct{}
 
-func (p funcLen) Throws() bool {
+func (f funcLen) Throws() bool {
 	return false
 }
 
-func (p funcLen) ArgumentCount() int {
+func (f funcLen) ArgumentCount() int {
 	return 1
 }
 
-func (p funcLen) ReturnValueCount() int {
+func (f funcLen) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcLen) Call(i *interpreter, args []any) (any, error) {
+func (f funcLen) Call(i *interpreter, args []any) (any, error) {
 	if l, ok := args[0].(list); ok {
 		return float64(len(l)), nil
 	}
@@ -225,19 +233,19 @@ func (p funcLen) Call(i *interpreter, args []any) (any, error) {
 
 type funcAppend struct{}
 
-func (p funcAppend) Throws() bool {
+func (f funcAppend) Throws() bool {
 	return false
 }
 
-func (p funcAppend) ArgumentCount() int {
+func (f funcAppend) ArgumentCount() int {
 	return 2
 }
 
-func (p funcAppend) ReturnValueCount() int {
+func (f funcAppend) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcAppend) Call(i *interpreter, args []any) (any, error) {
+func (f funcAppend) Call(i *interpreter, args []any) (any, error) {
 	if l, ok := args[0].(list); ok {
 		return append(l, args[1]), nil
 	}
@@ -246,19 +254,19 @@ func (p funcAppend) Call(i *interpreter, args []any) (any, error) {
 
 type funcConcat struct{}
 
-func (p funcConcat) Throws() bool {
+func (f funcConcat) Throws() bool {
 	return false
 }
 
-func (p funcConcat) ArgumentCount() int {
+func (f funcConcat) ArgumentCount() int {
 	return 2
 }
 
-func (p funcConcat) ReturnValueCount() int {
+func (f funcConcat) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcConcat) Call(i *interpreter, args []any) (any, error) {
+func (f funcConcat) Call(i *interpreter, args []any) (any, error) {
 	if l, ok := args[0].(list); ok {
 		if l2, ok := args[1].(list); ok {
 			return append(l, l2...), nil
@@ -270,19 +278,19 @@ func (p funcConcat) Call(i *interpreter, args []any) (any, error) {
 
 type funcRemove struct{}
 
-func (p funcRemove) Throws() bool {
+func (f funcRemove) Throws() bool {
 	return false
 }
 
-func (p funcRemove) ArgumentCount() int {
+func (f funcRemove) ArgumentCount() int {
 	return 2
 }
 
-func (p funcRemove) ReturnValueCount() int {
+func (f funcRemove) ReturnValueCount() int {
 	return 1
 }
 
-func (p funcRemove) Call(i *interpreter, args []any) (any, error) {
+func (f funcRemove) Call(i *interpreter, args []any) (any, error) {
 	if l, ok := args[0].(list); ok {
 		if index, ok := args[1].(float64); ok && index == float64(int(index)) {
 			if int(index) >= len(l) || index < 0 {
@@ -299,7 +307,7 @@ func (p funcRemove) Call(i *interpreter, args []any) (any, error) {
 
 type funcFileExists struct{}
 
-func (p funcFileExists) Throws() bool {
+func (f funcFileExists) Throws() bool {
 	return false
 }
 
@@ -319,7 +327,7 @@ func (f funcFileExists) Call(i *interpreter, args []any) (any, error) {
 
 type funcReadFileText struct{}
 
-func (p funcReadFileText) Throws() bool {
+func (f funcReadFileText) Throws() bool {
 	return true
 }
 
@@ -342,7 +350,7 @@ func (f funcReadFileText) Call(i *interpreter, args []any) (any, error) {
 
 type funcWriteFileText struct{}
 
-func (p funcWriteFileText) Throws() bool {
+func (f funcWriteFileText) Throws() bool {
 	return true
 }
 
@@ -369,7 +377,7 @@ func (f funcWriteFileText) Call(i *interpreter, args []any) (any, error) {
 
 type funcAppendFileText struct{}
 
-func (p funcAppendFileText) Throws() bool {
+func (f funcAppendFileText) Throws() bool {
 	return true
 }
 
@@ -397,7 +405,7 @@ func (f funcAppendFileText) Call(i *interpreter, args []any) (any, error) {
 
 type funcDeleteFile struct{}
 
-func (p funcDeleteFile) Throws() bool {
+func (f funcDeleteFile) Throws() bool {
 	return true
 }
 
@@ -420,7 +428,7 @@ func (f funcDeleteFile) Call(i *interpreter, args []any) (any, error) {
 
 type funcListFiles struct{}
 
-func (p funcListFiles) Throws() bool {
+func (f funcListFiles) Throws() bool {
 	return true
 }
 
@@ -443,4 +451,217 @@ func (f funcListFiles) Call(i *interpreter, args []any) (any, error) {
 		files[i] = entry.Name()
 	}
 	return files, nil
+}
+
+type funcToLower struct{}
+
+func (f funcToLower) Throws() bool {
+	return false
+}
+
+func (f funcToLower) ArgumentCount() int {
+	return 1
+}
+
+func (f funcToLower) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcToLower) Call(i *interpreter, args []any) (any, error) {
+	str := fmt.Sprint(args[0])
+	return strings.ToLower(str), nil
+}
+
+type funcToUpper struct{}
+
+func (f funcToUpper) Throws() bool {
+	return false
+}
+
+func (f funcToUpper) ArgumentCount() int {
+	return 1
+}
+
+func (f funcToUpper) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcToUpper) Call(i *interpreter, args []any) (any, error) {
+	str := fmt.Sprint(args[0])
+	return strings.ToUpper(str), nil
+}
+
+type funcContains struct{}
+
+func (f funcContains) Throws() bool {
+	return false
+}
+
+func (f funcContains) ArgumentCount() int {
+	return 2
+}
+
+func (f funcContains) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcContains) Call(i *interpreter, args []any) (any, error) {
+	if l, ok := args[0].(list); ok {
+		for _, item := range l {
+			if areEqual(args[1], item) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	str := fmt.Sprint(args[0])
+	substring := fmt.Sprint(args[1])
+	return strings.Contains(str, substring), nil
+}
+
+type funcIndexOf struct{}
+
+func (f funcIndexOf) Throws() bool {
+	return false
+}
+
+func (f funcIndexOf) ArgumentCount() int {
+	return 2
+}
+
+func (f funcIndexOf) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcIndexOf) Call(i *interpreter, args []any) (any, error) {
+	if l, ok := args[0].(list); ok {
+		for index, item := range l {
+			if areEqual(args[1], item) {
+				return index, nil
+			}
+		}
+		return -1, nil
+	}
+
+	str := fmt.Sprint(args[0])
+	substring := fmt.Sprint(args[1])
+	return strings.Index(str, substring), nil
+}
+
+type funcTrim struct{}
+
+func (f funcTrim) Throws() bool {
+	return false
+}
+
+func (f funcTrim) ArgumentCount() int {
+	return 1
+}
+
+func (f funcTrim) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcTrim) Call(i *interpreter, args []any) (any, error) {
+	str := fmt.Sprint(args[0])
+	return strings.TrimSpace(str), nil
+}
+
+type funcReplace struct{}
+
+func (f funcReplace) Throws() bool {
+	return false
+}
+
+func (f funcReplace) ArgumentCount() int {
+	return 3
+}
+
+func (f funcReplace) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcReplace) Call(i *interpreter, args []any) (any, error) {
+	if l, ok := args[0].(list); ok {
+		for index, item := range l {
+			if areEqual(args[1], item) {
+				l[index] = args[2]
+			}
+		}
+		return l, nil
+	}
+
+	str := fmt.Sprint(args[0])
+	old := fmt.Sprint(args[1])
+	new := fmt.Sprint(args[2])
+	return strings.ReplaceAll(str, old, new), nil
+}
+
+type funcSplit struct{}
+
+func (f funcSplit) Throws() bool {
+	return false
+}
+
+func (f funcSplit) ArgumentCount() int {
+	return 2
+}
+
+func (f funcSplit) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcSplit) Call(i *interpreter, args []any) (any, error) {
+	if l, ok := args[0].(list); ok {
+		lists := make(list, 0, 1)
+		segStart := 0
+		for index := 0; index < len(l); index++ {
+			if areEqual(args[1], l[index]) {
+				lists = append(lists, l[segStart:index])
+				segStart = index + 1
+			}
+		}
+		lists = append(lists, l[segStart:])
+		return lists, nil
+	}
+
+	str := fmt.Sprint(args[0])
+	sep := fmt.Sprint(args[1])
+
+	parts := strings.Split(str, sep)
+	l := make(list, len(parts))
+	for index, p := range parts {
+		l[index] = p
+	}
+	return l, nil
+}
+
+type funcJoin struct{}
+
+func (f funcJoin) Throws() bool {
+	return false
+}
+
+func (f funcJoin) ArgumentCount() int {
+	return 2
+}
+
+func (f funcJoin) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcJoin) Call(i *interpreter, args []any) (any, error) {
+	l, ok := args[0].(list)
+	if !ok {
+		return args[0], nil
+	}
+	sep := fmt.Sprint(args[1])
+
+	elems := make([]string, len(l))
+	for index, item := range l {
+		elems[index] = fmt.Sprint(item)
+	}
+
+	return strings.Join(elems, sep), nil
 }

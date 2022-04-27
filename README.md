@@ -44,9 +44,6 @@ crab helloworld.cb
 - functions as values / closures
 - exceptions
 - useful builtin functions
-  - working with lists: len(), append(), concat(), remove()
-  - file operations: fileExists(), writeFileText(), appendFileText(), readFileText(), deleteFile(), listFiles()
-  - other: print(), println(), intput(), millis()
 
 ## License
 

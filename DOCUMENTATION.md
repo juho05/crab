@@ -288,7 +288,9 @@ func main() {
 }
 ```
 
-## Lists
+## Strings and lists
+
+### Lists
 
 Lists in _crab_ can hold values of different types and can be dynamically resized:
 
@@ -307,6 +309,41 @@ println(len(list)); // 4
 
 concat(list, [3, 4, 5]);
 println(list); // [1,2,[true,false],new value,3,4,5]
+```
+
+### Strings
+
+You can work with strings similarly as with lists. The only difference is assignment.
+Due to the immutable nature of strings, you cannot assign a new character at a specified index.
+
+```go
+var helloworld = "Hello, World!";
+println(helloworld[4]); // o
+helloworld[4] = "y"; // error!
+```
+
+### Utility functions
+
+There are a number of builtin utility functions that make working with lists and strings a lot easier:
+
+```go
+// will convert all arguments to strings prior to processing
+toLower("HelLo, WoRLd!"); // "hello, world!"
+toUpper("HelLo, WoRLd!"); // "HELLO, WORLD!"
+trim("  \t  Hello, World!       \t  "); "Hello, World!"
+
+// work with both strings and lists
+contains("Hello, World!", "!"); // true
+contains([1,2,4,5], [2]); // true
+indexOf("Hello, World!", "W"); // 7
+indexOf([1,2,3,4], [5]); // -1
+replace("Hello, World!", "l", "n"); // "Henno, Wornd!"
+replace([1,2,3,4], 2, 1); // [1,1,3,4]
+split("Hello, World!", ","); // ["Hello", " World!"]
+split([1,2,3,4,5], 3); // [[1,2],[4,5]]
+
+// only work with lists
+join([1,"hello",false], "-"); // "1-hello-false"
 ```
 
 ## Exceptions
