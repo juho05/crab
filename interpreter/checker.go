@@ -318,6 +318,9 @@ func (c *checker) VisitCall(expr *ExprCall) (any, error) {
 	var returnValueCount any
 	if v, ok := expr.Callee.(*ExprVariable); ok {
 		scope := c.findVariable(v.Name.Lexeme)
+		if scope < 0 {
+			return nil, c.newError("Undefined name.", v.Name)
+		}
 		variable := c.scopes[scope][v.Name.Lexeme]
 
 		if variable.nameType == nameTypeFunction && variable.functionDecl != nil {
