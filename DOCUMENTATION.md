@@ -193,6 +193,7 @@ _crab_ the `break` and `continue` statements in loops.
 | --     | decrement           | decrements the variable by 1
 | !      | bang                | negates the logical value after it
 | -      | unary minus         | multiplies the value after it with -1
+| **     | exponentiation      | returns the result of raising the first operand to the power of the second operand
 | +      | addition            | adds two values together
 | -      | subtraction         | subtracts two values from another
 | *      | multiplication      | multiplies two values with each other

@@ -667,12 +667,34 @@ func (p *parser) term() (Expr, error) {
 }
 
 func (p *parser) factor() (Expr, error) {
-	expr, err := p.unary()
+	expr, err := p.power()
 	if err != nil {
 		return nil, err
 	}
 
 	for p.match(ASTERISK, SLASH, PERCENT) {
+		operator := p.previous()
+		right, err := p.power()
+		if err != nil {
+			return nil, err
+		}
+		expr = &ExprBinary{
+			Operator: operator,
+			Left:     expr,
+			Right:    right,
+		}
+	}
+
+	return expr, nil
+}
+
+func (p *parser) power() (Expr, error) {
+	expr, err := p.unary()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(ASTERISK_ASTERISK) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {

@@ -56,6 +56,8 @@ func (s *scanner) scan() error {
 		case '*':
 			if s.match('=') {
 				s.addToken(ASTERISK_EQUAL, nil)
+			} else if s.match('*') {
+				s.addToken(ASTERISK_ASTERISK, nil)
 			} else {
 				s.addToken(ASTERISK, nil)
 			}

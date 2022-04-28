@@ -417,6 +417,11 @@ func (i *interpreter) VisitBinary(expr *ExprBinary) (any, error) {
 			return left.(float64) * right.(float64), nil
 		}
 		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
+	case ASTERISK_ASTERISK:
+		if isNumber(left, right) {
+			return math.Pow(left.(float64), right.(float64)), nil
+		}
+		return nil, i.newError(fmt.Sprintf("Both operands must be numbers."), expr.Operator)
 	case SLASH:
 		if isNumber(left, right) {
 			return left.(float64) / right.(float64), nil
