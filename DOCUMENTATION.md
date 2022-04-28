@@ -447,7 +447,30 @@ Returns a list of all file names in the specified directory.
 var files = listFiles("directory");
 ```
 
-## Other useful functions
+## Math 
+
+### Min/max
+
+```go
+min(2.5, 3.3); // 2.5
+max(2.5, 3.3); // 3.3
+```
+
+### Floor/ceil/round
+
+```go
+floor(2.5); // 2
+ceil(2.5); // 2
+
+round(2.5); // 3
+round(2.4); // 2
+```
+
+### Square root
+
+```go
+sqrt(9); // 3
+```
 
 ### Random number
 

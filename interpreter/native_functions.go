@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"path"
@@ -69,6 +70,12 @@ var nativeFunctions = map[string]Callable{
 	"join":           funcJoin{},
 	"random":         funcRandom{},
 	"randomInt":      funcRandomInt{},
+	"min":            funcMin{},
+	"max":            funcMax{},
+	"floor":          funcFloor{},
+	"ceil":           funcCeil{},
+	"round":          funcRound{},
+	"sqrt":           funcSqrt{},
 }
 
 type funcPrint struct{}
@@ -741,4 +748,191 @@ func (f funcRandomInt) Call(i *interpreter, args []any) (any, error) {
 	}
 
 	return float64(int(rand.Float64()*(num2-num1) + num1)), nil
+}
+
+type funcMin struct{}
+
+func (f funcMin) Throws() bool {
+	return false
+}
+
+func (f funcMin) ArgumentCount() int {
+	return 2
+}
+
+func (f funcMin) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcMin) Call(i *interpreter, args []any) (any, error) {
+	num1 := 0.0
+	if n1, ok := args[0].(float64); ok {
+		num1 = n1
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+	num2 := 0.0
+	if n2, ok := args[1].(float64); ok {
+		num2 = n2
+	} else {
+		return nil, newTypeError(args[1], "Number")
+	}
+
+	return math.Min(num1, num2), nil
+}
+
+type funcMax struct{}
+
+func (f funcMax) Throws() bool {
+	return false
+}
+
+func (f funcMax) ArgumentCount() int {
+	return 2
+}
+
+func (f funcMax) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcMax) Call(i *interpreter, args []any) (any, error) {
+	num1 := 0.0
+	if n1, ok := args[0].(float64); ok {
+		num1 = n1
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+	num2 := 0.0
+	if n2, ok := args[1].(float64); ok {
+		num2 = n2
+	} else {
+		return nil, newTypeError(args[1], "Number")
+	}
+
+	return math.Max(num1, num2), nil
+}
+
+type funcAbs struct{}
+
+func (f funcAbs) Throws() bool {
+	return false
+}
+
+func (f funcAbs) ArgumentCount() int {
+	return 1
+}
+
+func (f funcAbs) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcAbs) Call(i *interpreter, args []any) (any, error) {
+	num := 0.0
+	if n, ok := args[0].(float64); ok {
+		num = n
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+
+	return math.Abs(num), nil
+}
+
+type funcFloor struct{}
+
+func (f funcFloor) Throws() bool {
+	return false
+}
+
+func (f funcFloor) ArgumentCount() int {
+	return 1
+}
+
+func (f funcFloor) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcFloor) Call(i *interpreter, args []any) (any, error) {
+	num := 0.0
+	if n, ok := args[0].(float64); ok {
+		num = n
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+
+	return math.Floor(num), nil
+}
+
+type funcCeil struct{}
+
+func (f funcCeil) Throws() bool {
+	return false
+}
+
+func (f funcCeil) ArgumentCount() int {
+	return 1
+}
+
+func (f funcCeil) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcCeil) Call(i *interpreter, args []any) (any, error) {
+	num := 0.0
+	if n, ok := args[0].(float64); ok {
+		num = n
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+
+	return math.Ceil(num), nil
+}
+
+type funcRound struct{}
+
+func (f funcRound) Throws() bool {
+	return false
+}
+
+func (f funcRound) ArgumentCount() int {
+	return 1
+}
+
+func (f funcRound) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcRound) Call(i *interpreter, args []any) (any, error) {
+	num := 0.0
+	if n, ok := args[0].(float64); ok {
+		num = n
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+
+	return math.Round(num), nil
+}
+
+type funcSqrt struct{}
+
+func (f funcSqrt) Throws() bool {
+	return false
+}
+
+func (f funcSqrt) ArgumentCount() int {
+	return 1
+}
+
+func (f funcSqrt) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcSqrt) Call(i *interpreter, args []any) (any, error) {
+	num := 0.0
+	if n, ok := args[0].(float64); ok {
+		num = n
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+
+	return math.Sqrt(num), nil
 }
