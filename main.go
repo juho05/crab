@@ -3,13 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Bananenpro/crab/interpreter"
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	verbose := flag.Bool("verbose", false, "Print verbose output.")
 
 	flag.Usage = func() {

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -66,6 +67,7 @@ var nativeFunctions = map[string]Callable{
 	"replace":        funcReplace{},
 	"split":          funcSplit{},
 	"join":           funcJoin{},
+	"random":         funcRandom{},
 }
 
 type funcPrint struct{}
@@ -664,4 +666,41 @@ func (f funcJoin) Call(i *interpreter, args []any) (any, error) {
 	}
 
 	return strings.Join(elems, sep), nil
+}
+
+type funcRandom struct{}
+
+func (f funcRandom) Throws() bool {
+	return false
+}
+
+func (f funcRandom) ArgumentCount() int {
+	return 2
+}
+
+func (f funcRandom) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcRandom) Call(i *interpreter, args []any) (any, error) {
+	num1 := 0.0
+	if n1, ok := args[0].(float64); ok {
+		num1 = n1
+	} else {
+		return nil, newTypeError(args[0], "Number")
+	}
+	num2 := 0.0
+	if n2, ok := args[1].(float64); ok {
+		num2 = n2
+	} else {
+		return nil, newTypeError(args[1], "Number")
+	}
+
+	if num1 > num2 {
+		return nil, CallError{
+			Message: fmt.Sprintf("Second argument is less than the first argument."),
+		}
+	}
+
+	return rand.Float64()*(num2-num1) + num1, nil
 }

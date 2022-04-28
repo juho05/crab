@@ -1,0 +1,27 @@
+func main() {
+	var number = random(0, 100);
+	number = number - number%1;
+
+	var tries = 0;
+	var guessedNumber = -1;
+	while (true) {
+		try {
+			guessedNumber = toNumber(input("Enter a number: "));
+			tries++;
+
+			if (guessedNumber == number) {
+				break;
+			}
+
+			if (guessedNumber > number) {
+				println("Too big!");
+			} else {
+				println("Too small!");
+			}
+		} catch {
+			println("Not a number!");
+		}
+	}
+
+	println("Correct! You needed " + tries + " tries!");
+}
