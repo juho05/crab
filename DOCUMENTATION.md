@@ -454,3 +454,17 @@ Returns a list of all file names in the specified directory.
 ```go
 var files = listFiles("directory");
 ```
+
+## Other useful functions
+
+### Random number
+
+Generate a random floating point number between _a_ (inclusive) and _b_ (exclusive).
+
+Example:
+
+```go
+var a = 0;
+var b = 100;
+var num = random(a, b);
+```
