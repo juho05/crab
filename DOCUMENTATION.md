@@ -51,20 +51,16 @@ In general all statements in _crab_ have to end with a `;` similar to other C-li
 To define a variable in _crab_ simply use the `var` keyword:
 
 ```go
-func main() {
-	var x = 5;
-	var y; // equivalent to 'var y = null;'
-}
+var x = 5;
+var y; // equivalent to 'var y = null;'
 ```
 
 Omit the `var` keyword when you want to assign a value to an existing variable:
 
 ```go
-func main() {
-	var x = 5;
-	// because 'crab' has dynamic typing, the following works:
-	x = "Hello World!";
-}
+var x = 5;
+// because 'crab' has dynamic typing, the following works:
+x = "Hello World!";
 ```
 
 _crab_ has global and local scope and supports variable shadowing:
@@ -102,10 +98,8 @@ There are 3 functions for exactly this purpose: `toString()`, `toNumber()` and `
 
 Example:
 ```go
-func main() {
-	var x = 5;
-	x = toString(x); // x is now a string
-}
+var x = 5;
+x = toString(x); // x is now a string
 ```
 
 ### toNumber()
@@ -115,14 +109,13 @@ func main() {
 `toNumber()` accepts string representations of integers and floating point numbers.
 
 Example:
+
 ```go
-func main() {
-	var x = "5";
-	try {
-		x = toNumber(x); // x is now a number
-	} catch {
-		// couldn't convert x to a number
-	}
+var x = "5";
+try {
+	x = toNumber(x); // x is now a number
+} catch {
+	// couldn't convert x to a number
 }
 ```
 
@@ -134,13 +127,11 @@ func main() {
 
 Example:
 ```go
-func main() {
-	var x = "true";
-	try {
-		x = toBoolean(x); // x is now a boolean
-	} catch {
-		// couldn't convert x to a boolean
-	}
+var x = "true";
+try {
+	x = toBoolean(x); // x is now a boolean
+} catch {
+	// couldn't convert x to a boolean
 }
 ```
 
@@ -460,12 +451,18 @@ var files = listFiles("directory");
 
 ### Random number
 
-Generate a random floating point number between _a_ (inclusive) and _b_ (exclusive).
-
-Example:
+Generate a random floating point number between _a_ (inclusive) and _b_ (exclusive):
 
 ```go
 var a = 0;
 var b = 100;
 var num = random(a, b);
+```
+
+Generate a random integer between _a_ (inclusive) and _b_ (exclusive):
+
+```go
+var a = 0;
+var b = 100;
+var num = randomInt(a, b);
 ```

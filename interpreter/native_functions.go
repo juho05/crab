@@ -68,6 +68,7 @@ var nativeFunctions = map[string]Callable{
 	"split":          funcSplit{},
 	"join":           funcJoin{},
 	"random":         funcRandom{},
+	"randomInt":      funcRandomInt{},
 }
 
 type funcPrint struct{}
@@ -703,4 +704,41 @@ func (f funcRandom) Call(i *interpreter, args []any) (any, error) {
 	}
 
 	return rand.Float64()*(num2-num1) + num1, nil
+}
+
+type funcRandomInt struct{}
+
+func (f funcRandomInt) Throws() bool {
+	return false
+}
+
+func (f funcRandomInt) ArgumentCount() int {
+	return 2
+}
+
+func (f funcRandomInt) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcRandomInt) Call(i *interpreter, args []any) (any, error) {
+	num1 := 0.0
+	if n1, ok := args[0].(float64); ok && n1 == float64(int64(n1)) {
+		num1 = n1
+	} else {
+		return nil, newTypeError(args[0], "Integer")
+	}
+	num2 := 0.0
+	if n2, ok := args[1].(float64); ok && n2 == float64(int64(n2)) {
+		num2 = n2
+	} else {
+		return nil, newTypeError(args[1], "Integer")
+	}
+
+	if num1 > num2 {
+		return nil, CallError{
+			Message: fmt.Sprintf("Second argument is less than the first argument."),
+		}
+	}
+
+	return float64(int(rand.Float64()*(num2-num1) + num1)), nil
 }

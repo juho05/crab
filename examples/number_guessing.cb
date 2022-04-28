@@ -1,6 +1,5 @@
 func main() {
-	var number = random(0, 100);
-	number = number - number%1;
+	var number = randomInt(0, 100);
 
 	var tries = 0;
 	var guessedNumber = -1;
