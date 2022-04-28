@@ -53,6 +53,7 @@ To define a variable in _crab_ simply use the `var` keyword:
 ```go
 func main() {
 	var x = 5;
+	var y; // equivalent to 'var y = null;'
 }
 ```
 
