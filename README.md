@@ -47,6 +47,7 @@ crab helloworld.cb
 ## Editor support
 
 - [vim-crab](https://github.com/Bananenpro/vim-crab): syntax and indent files for _crab_ in vim
+- [vscode-crab](https://github.com/Bananenpro/vscode-crab): syntax highlighting in VS Code
 
 ## License
 
