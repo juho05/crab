@@ -304,6 +304,8 @@ Lists in _crab_ can hold values of different types and can be dynamically resize
 var emptyList = [];
 var list = [1, 2, "Hello, World!", [true, false]];
 
+var bigList = createList(1000); // Create a list with 1000 null entries
+
 println(list[3]); // Hello, World!
 
 append(list, "new value");

@@ -50,6 +50,7 @@ var nativeFunctions = map[string]Callable{
 	"toString":       funcToString{},
 	"toNumber":       funcToNumber{},
 	"toBoolean":      funcToBoolean{},
+	"createList":     funcCreateList{},
 	"len":            funcLen{},
 	"append":         funcAppend{},
 	"concat":         funcConcat{},
@@ -215,6 +216,27 @@ func (f funcToBoolean) Call(i *interpreter, args []any) (any, error) {
 		return nil, i.NewException(fmt.Sprintf("Cannot convert '%v' to a boolean.", args[0]), -1)
 	}
 	return boolean, nil
+}
+
+type funcCreateList struct{}
+
+func (f funcCreateList) Throws() bool {
+	return false
+}
+
+func (f funcCreateList) ArgumentCount() int {
+	return 1
+}
+
+func (f funcCreateList) ReturnValueCount() int {
+	return 1
+}
+
+func (f funcCreateList) Call(i *interpreter, args []any) (any, error) {
+	if size, ok := args[0].(float64); ok && size == float64(int(size)) {
+		return make(list, int(size)), nil
+	}
+	return nil, newTypeError(args[1], "Integer")
 }
 
 type funcLen struct{}
