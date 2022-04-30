@@ -26,9 +26,6 @@ It has a C-like syntax but a dynamic type system, which allows variables to hold
 Despite its dynamic nature _crab_ tries to catch errors like undefined identifiers, wrong argument or return value counts or `break` statements
 outside of loops at parse time.
 
-The standard library currently includes functions for user in- and output, basic handling of lists (e.g. appending, removing items, …) and
-simple file operations like reading/writing files or listing all files in a directory.
-
 ## Hello World
 
 To beginn writing code in _crab_ you first need to create a new text file. 
