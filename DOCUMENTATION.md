@@ -3,6 +3,21 @@
 The following instructions assume that you have a working [installation](https://github.com/Bananenpro/crab/blob/main/README.md#Installation)
 of the _crab_ interpreter.
 
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Hello World](#hello-world)
+- [Variables](#variables)
+- [Type conversion](#type-conversion)
+- [Control flow](#control-flow)
+- [Operators](#operators)
+- [Functions](#functions)
+- [Strings and lists](#strings-and-lists)
+- [Exceptions](#exceptions)
+- [User input/output](#user-inputoutput)
+- [File operations](#file-operations)
+- [Math](#math)
+
 ## Introduction
 
 _crab_ is an interpreted toy programming language, which makes it quiet slow but still usable for simple tasks.
