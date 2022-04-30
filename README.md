@@ -1,6 +1,4 @@
 # crab 🦀
-![License](https://img.shields.io/github/license/Bananenpro/crab)
-![Lines of code](https://img.shields.io/tokei/lines/github/Bananenpro/crab)
 
 An interpreted dynamically typed toy programming language.
 
