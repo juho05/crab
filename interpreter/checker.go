@@ -106,9 +106,11 @@ func (c *checker) VisitVarDecl(stmt *StmtVarDecl) error {
 			nameType: nameTypeVariable,
 		}
 	}
-	_, err := stmt.Expr.Accept(c)
-	if err != nil {
-		return err
+	if stmt.Expr != nil {
+		_, err := stmt.Expr.Accept(c)
+		if err != nil {
+			return err
+		}
 	}
 	for _, name := range stmt.Names {
 		c.scopes[c.scope][name.Lexeme] = variable{
