@@ -17,6 +17,7 @@ of the _crab_ interpreter.
 - [User input/output](#user-inputoutput)
 - [File operations](#file-operations)
 - [Math](#math)
+- [Measuring time](#measuring-time)
 
 ## Introduction
 
@@ -500,4 +501,12 @@ Generate a random integer between _a_ (inclusive) and _b_ (exclusive):
 var a = 0;
 var b = 100;
 var num = randomInt(a, b);
+```
+
+## Measuring time
+
+You can can the current unix time in milliseconds with the `millis()` function:
+
+```go
+var now = millis();
 ```

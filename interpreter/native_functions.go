@@ -152,7 +152,7 @@ func (f funcMillis) ReturnValueCount() int {
 }
 
 func (f funcMillis) Call(i *interpreter, args []any) (any, error) {
-	return time.Now().UnixMilli(), nil
+	return float64(time.Now().UnixMilli()), nil
 }
 
 type funcToString struct{}
