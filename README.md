@@ -11,10 +11,10 @@ An interpreted dynamically typed toy programming language.
 - [Go](https://go.dev/) 1.18+
 
 ```sh
-go install github.com/Bananenpro/crab@latest
+curl https://raw.githubusercontent.com/Bananenpro/crab/main/install.sh | bash
 ```
 
-You might need to add $GOBIN to your path.
+To update _crab_ simply run the above command again.
 
 ## Hello World
 
