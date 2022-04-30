@@ -79,6 +79,7 @@ func Check(program []Stmt, lines [][]rune) error {
 		}
 	}
 
+	checker.scopes = checker.scopes[0:cap(checker.scopes)]
 	for _, scope := range checker.scopes {
 		for _, v := range scope {
 			if v.state != variableStateUsed {
