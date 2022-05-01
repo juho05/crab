@@ -507,7 +507,7 @@ var num = randomInt(a, b);
 
 ## Measuring time
 
-You can can the current unix time in milliseconds with the `millis()` function:
+You can get the current unix time in milliseconds with the `millis()` function:
 
 ```go
 var now = millis();
