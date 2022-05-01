@@ -10,11 +10,21 @@ An interpreted dynamically typed toy programming language.
 
 - [Go](https://go.dev/) 1.18+
 
+### Linux
+
 ```sh
 curl https://raw.githubusercontent.com/Bananenpro/crab/main/install.sh | bash
 ```
 
 To update _crab_ simply run the above command again.
+
+### Compiling manually
+
+```sh
+git clone https://github.com/Bananenpro/crab.git
+cd crab
+go build .
+```
 
 ## Hello World
 
