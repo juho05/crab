@@ -462,11 +462,11 @@ func (p *parser) assign() (Expr, error) {
 		}
 		exprs = append(exprs, expr)
 	}
-	if isAssign && !p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
+	if isAssign && !p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, ASTERISK_ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
 		return nil, p.newError("Expect assignment operator after identifier list.")
 	}
 
-	if isAssign || p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
+	if isAssign || p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, ASTERISK_EQUAL, ASTERISK_ASTERISK_EQUAL, SLASH_EQUAL, PERCENT_EQUAL) {
 		operator := p.previous()
 		assignees := make([]Expr, 0)
 		for _, expr := range exprs {
@@ -492,6 +492,8 @@ func (p *parser) assign() (Expr, error) {
 			tokenType = MINUS
 		case ASTERISK_EQUAL:
 			tokenType = ASTERISK
+		case ASTERISK_ASTERISK_EQUAL:
+			tokenType = ASTERISK_ASTERISK
 		case SLASH_EQUAL:
 			tokenType = SLASH
 		case PERCENT_EQUAL:

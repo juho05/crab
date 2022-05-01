@@ -217,6 +217,7 @@ _crab_ the `break` and `continue` statements in loops.
 | +=     | assignment          | adds and assigns the right value to the left operand
 | -=     | assignment          | subtracts and assigns the right value from the left operand
 | *=     | assignment          | multiplies and assigns the right value with the left operand
+| *\*=   | assignment          | assigns the the left operand raised to the power of the right operand to the left operand
 | /=     | assignment          | divides and assigns the right value from the left operand
 | %=     | assignment          | takes the modulus and assigns the right value to the left operand
 
@@ -329,6 +330,15 @@ var helloworld = "Hello, World!";
 println(helloworld[4]); // o
 helloworld[4] = "y"; // error!
 ```
+
+#### Supported escape sequences
+
+- `\n`: new line
+- `\r`: carriage return
+- `\t`: horizontal tab
+- `\"`: double quotation mark
+- `\\`: backslash
+- `\e`: [ASCII escape character](https://en.wikipedia.org/wiki/Escape_character#ASCII_escape_character)
 
 ### Utility functions
 

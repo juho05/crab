@@ -57,7 +57,11 @@ func (s *scanner) scan() error {
 			if s.match('=') {
 				s.addToken(ASTERISK_EQUAL, nil)
 			} else if s.match('*') {
-				s.addToken(ASTERISK_ASTERISK, nil)
+				if s.match('=') {
+					s.addToken(ASTERISK_ASTERISK_EQUAL, nil)
+				} else {
+					s.addToken(ASTERISK_ASTERISK, nil)
+				}
 			} else {
 				s.addToken(ASTERISK, nil)
 			}
