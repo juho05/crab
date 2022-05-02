@@ -35,4 +35,5 @@ postfix -> subscript ('++'|'--') | subscript
 callOrSubscript -> primary (call|subscript)*
 subscript -> '[' expression ']'
 call -> '(' (conditional (',' conditional)*)? ')'
+anonymousFunc -> 'func' '(' parameters? ')' NUMBER 'throws'? block
 primary -> NUMBER | STRING | "true" | "false" | IDENTIFIER | '(' conditional ')' | '[' (conditional (',' conditional))? ']'

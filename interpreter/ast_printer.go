@@ -39,7 +39,13 @@ func (a ASTPrinter) VisitVarDecl(stmt *StmtVarDecl) error {
 
 func (a ASTPrinter) VisitFuncDecl(stmt *StmtFuncDecl) error {
 	body := stmt.Body.Accept(a)
-	return PrinterResult(fmt.Sprintf("[fn] fun %s() %d %s", stmt.Name.Lexeme, stmt.ReturnValueCount, body))
+
+	throws := ""
+	if stmt.Throws {
+		throws = "throws"
+	}
+
+	return PrinterResult(fmt.Sprintf("[fn] func %s() %d %s %s", stmt.Name.Lexeme, stmt.ReturnValueCount, throws, body))
 }
 
 func (a ASTPrinter) VisitIf(stmt *StmtIf) error {
@@ -216,6 +222,17 @@ func (a ASTPrinter) VisitAssign(assign *ExprAssign) (any, error) {
 		assignees = fmt.Sprintf("%s, %v", assignees, assignee)
 	}
 	return fmt.Sprintf("(%s = %v)", assignees, right), nil
+}
+
+func (a ASTPrinter) VisitAnonymousFunction(expr *ExprAnonymousFunction) (any, error) {
+	body := expr.Body.Accept(a)
+
+	throws := ""
+	if expr.Throws {
+		throws = "throws"
+	}
+
+	return fmt.Sprintf("(func() %d %s %s)", expr.ReturnValueCount, throws, body), nil
 }
 
 func toString(value any) string {

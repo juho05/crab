@@ -33,7 +33,8 @@ func (p *parser) declaration(allowNonDeclarationStatements bool) Stmt {
 	var err error
 	if p.match(VAR) {
 		stmt, err = p.varDecl()
-	} else if p.match(FUNC) {
+	} else if p.peek().Type == FUNC && p.peekNext().Type == IDENTIFIER {
+		p.match(FUNC)
 		stmt, err = p.funcDecl()
 	} else if allowNonDeclarationStatements {
 		stmt, err = p.statement()
@@ -764,7 +765,7 @@ func (p *parser) postfix() (Expr, error) {
 }
 
 func (p *parser) subscriptOrCall() (Expr, error) {
-	expr, err := p.primary()
+	expr, err := p.anonymousFunc()
 	if err != nil {
 		return nil, err
 	}
@@ -812,6 +813,68 @@ func (p *parser) subscriptOrCall() (Expr, error) {
 		}
 	}
 	return expr, nil
+}
+
+func (p *parser) anonymousFunc() (Expr, error) {
+	if !p.match(FUNC) {
+		return p.primary()
+	}
+
+	keyword := p.previous()
+
+	if !p.match(OPEN_PAREN) {
+		return nil, p.newError("Expect '(' after 'func'.")
+	}
+
+	parameters := make([]string, 0)
+	for p.peek().Type != CLOSE_PAREN {
+		if !p.match(IDENTIFIER) {
+			return nil, p.newError("Invalid parameter name.")
+		}
+		parameters = append(parameters, p.previous().Lexeme)
+		if p.peek().Type == CLOSE_PAREN {
+			break
+		}
+		if !p.match(COMMA) {
+			return nil, p.newError("Expect ',' between parameters.")
+		}
+	}
+
+	if !p.match(CLOSE_PAREN) {
+		return nil, p.newError("Expect ')' after function parameter list.")
+	}
+
+	returnValueCount := 0
+	if p.peek().Type == NUMBER {
+		num := p.peek()
+		if num.Lexeme != "0" && num.Lexeme != "1" && num.Lexeme != "2" && num.Lexeme != "3" && num.Lexeme != "4" {
+			return nil, p.newError("Only 0, 1, 2, 3 or 4 return values are allowed.")
+		}
+		returnValueCount = int(num.Literal.(float64))
+		p.current++
+	}
+
+	throws := false
+	if p.match(THROWS) {
+		throws = true
+	}
+
+	if !p.match(OPEN_BRACE) {
+		return nil, p.newError("Expect block after function signature.")
+	}
+
+	block, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExprAnonymousFunction{
+		Keyword:          keyword,
+		Body:             block,
+		Parameters:       parameters,
+		ReturnValueCount: returnValueCount,
+		Throws:           throws,
+	}, nil
 }
 
 func (p *parser) primary() (Expr, error) {
@@ -891,6 +954,10 @@ func (p *parser) previous() Token {
 
 func (p *parser) peek() Token {
 	return p.tokens[p.current]
+}
+
+func (p *parser) peekNext() Token {
+	return p.tokens[p.current+1]
 }
 
 func (p *parser) synchronize() {

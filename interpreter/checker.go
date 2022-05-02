@@ -418,6 +418,28 @@ func (c *checker) VisitAssign(assign *ExprAssign) (any, error) {
 	return assign.Expr.Accept(c)
 }
 
+func (c *checker) VisitAnonymousFunction(expr *ExprAnonymousFunction) (any, error) {
+	c.beginScope()
+	defer c.endScope()
+	for _, p := range expr.Parameters {
+		c.scopes[c.scope][p] = variable{
+			state:    variableStateUsed,
+			nameType: nameTypeVariable,
+		}
+	}
+
+	oldState := c.copyState()
+	c.state["inLoop"] = false
+	c.state["returnValueCount"] = expr.ReturnValueCount
+	c.state["canThrow"] = expr.Throws
+
+	err := expr.Body.Accept(c)
+
+	c.state = oldState
+
+	return nil, err
+}
+
 func (c *checker) beginScope() {
 	c.scopes = append(c.scopes, make(map[string]variable))
 	c.scope++

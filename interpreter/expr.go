@@ -12,6 +12,7 @@ type ExprVisitor interface {
 	VisitLogical(expr *ExprLogical) (any, error)
 	VisitTernary(expr *ExprTernary) (any, error)
 	VisitAssign(expr *ExprAssign) (any, error)
+	VisitAnonymousFunction(expr *ExprAnonymousFunction) (any, error)
 }
 
 type Expr interface {
@@ -121,4 +122,16 @@ type ExprAssign struct {
 
 func (e *ExprAssign) Accept(visitor ExprVisitor) (any, error) {
 	return visitor.VisitAssign(e)
+}
+
+type ExprAnonymousFunction struct {
+	Keyword          Token
+	Body             Stmt
+	Parameters       []string
+	ReturnValueCount int
+	Throws           bool
+}
+
+func (e *ExprAnonymousFunction) Accept(visitor ExprVisitor) (any, error) {
+	return visitor.VisitAnonymousFunction(e)
 }

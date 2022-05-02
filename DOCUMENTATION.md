@@ -237,6 +237,8 @@ func main() {
 
 ```
 
+### Return
+
 If you want to return values from your function, you will need to tell _crab_ about the number
 of values you want to return:
 
@@ -267,6 +269,8 @@ func main() {
 
 _crab_ supports at most **4** return values.
 
+### Parameters
+
 Functions can take arguments by specifying a parameter list between the parantheses:
 
 ```go
@@ -279,6 +283,8 @@ func main() {
 }
 ```
 
+### Nested functions
+
 Functions can be declared inside of other functions with closure support:
 
 ```go
@@ -287,6 +293,23 @@ func returnAFunction(text) 1 {
 		println(text);
 	}
 	return function;
+}
+
+func main() {
+	var fn = returnAFunction("Hello, World!");
+	fn(); // Hello, World!
+}
+```
+
+### Anonymous functions
+
+_crab_ also allows defining anonymous functions. With anonymous functions the previous example could be rewritten as:
+
+```go
+func returnAFunction(text) 1 {
+	return func(){
+		println(text);
+	};
 }
 
 func main() {

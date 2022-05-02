@@ -572,6 +572,17 @@ func (i *interpreter) VisitAssign(expr *ExprAssign) (any, error) {
 	return value, nil
 }
 
+func (i *interpreter) VisitAnonymousFunction(expr *ExprAnonymousFunction) (any, error) {
+	return function{
+		name:             expr.Keyword,
+		body:             expr.Body,
+		closure:          i.env,
+		parameters:       expr.Parameters,
+		returnValueCount: expr.ReturnValueCount,
+		throws:           expr.Throws,
+	}, nil
+}
+
 func (i *interpreter) VisitThrow(stmt *StmtThrow) error {
 	value, err := stmt.Value.Accept(i)
 	if err != nil {
