@@ -21,7 +21,7 @@ try -> 'try' block 'catch' ('(' IDENTIFIER ')')? block
 throw -> 'throws' expression ';'
 
 expression -> assign
-assign -> IDENTIFIER (',' IDENTIFIER)? ('='|'+='|'-='|'*='|'/='|'%=') assign | conditional
+assign -> IDENTIFIER (',' IDENTIFIER)? ('='|'+='|'-='|'*='|'/='|'%='|'**=') assign | conditional
 conditional -> or '?' conditional ':' conditional
 or -> and (('||'|'^^') and)*
 and -> equality ('&&' equality)*
