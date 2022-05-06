@@ -26,7 +26,7 @@ To update _crab_ simply run the above command again.
 Run the following command as Administrator:
 
 ```powershell
-GOPRIVATE=github.com/Bananenpro/crab go install github.com/Bananenpro/crab@latest
+go install github.com/Bananenpro/crab@latest
 ```
 
 To update _crab_ simply run the above command again.
