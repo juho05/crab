@@ -371,7 +371,7 @@ There are a number of builtin utility functions that make working with lists and
 // will convert all arguments to strings prior to processing
 toLower("HelLo, WoRLd!"); // "hello, world!"
 toUpper("HelLo, WoRLd!"); // "HELLO, WORLD!"
-trim("  \t  Hello, World!       \t  "); "Hello, World!"
+trim("  \t  Hello, World!       \t  "); // "Hello, World!"
 
 // work with both strings and lists
 contains("Hello, World!", "!"); // true
